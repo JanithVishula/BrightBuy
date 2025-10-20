@@ -15,6 +15,6 @@ export const getImageUrl = (imageUrl) => {
   // Otherwise, prepend backend URL (local uploaded images)
   const API_SERVER_URL =
     process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-    "http://localhost:5001";
+    "https://gallant-friendship-production.up.railway.app";
   return `${API_SERVER_URL}${imageUrl}`;
 };

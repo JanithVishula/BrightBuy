@@ -4,10 +4,10 @@ import Link from "next/link";
 import BackButton from "@/components/BackButton";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-  "http://localhost:5001";
+  "https://gallant-friendship-production.up.railway.app";
 
 export default function StaffOrdersPage() {
   const [orders, setOrders] = useState([]);

@@ -2,10 +2,10 @@
 import React, { useState, useRef } from "react";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-  "http://localhost:5001";
+  "https://gallant-friendship-production.up.railway.app";
 
 const ImageUpload = ({ onImageUploaded, currentImage = null }) => {
   const [selectedFile, setSelectedFile] = useState(null);
