@@ -175,9 +175,48 @@ export default function ProductDetailPage() {
   const isInStock = selectedVariant && selectedVariant.stock_quantity > 0;
   const estimatedDelivery = isInStock
     ? "5-7 business days"
-    : "8-10 business days";
+    : "8-10 business days (backorder)";
 
+  // Get the image URL for the selected variant
   const imageUrl = getImageUrl(selectedVariant?.image_url);
+
+  // Get all unique variant images for gallery (group by color)
+  const variantImages = React.useMemo(() => {
+    if (!product?.variants) return [];
+    
+    const imageMap = new Map();
+    product.variants.forEach(variant => {
+      const key = variant.color || 'default';
+      if (variant.image_url && !imageMap.has(key)) {
+        imageMap.set(key, {
+          url: getImageUrl(variant.image_url),
+          color: variant.color,
+          variant_id: variant.variant_id
+        });
+      }
+    });
+    
+    return Array.from(imageMap.values());
+  }, [product?.variants]);
+
+  // State for selected image (for gallery)
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+
+  // Update current image when variant changes
+  React.useEffect(() => {
+    if (selectedVariant && variantImages.length > 0) {
+      const matchingIndex = variantImages.findIndex(
+        img => img.color === selectedVariant.color
+      );
+      if (matchingIndex !== -1) {
+        setCurrentImageIndex(matchingIndex);
+      }
+    }
+  }, [selectedVariant, variantImages]);
+
+  const currentDisplayImage = variantImages.length > 0 
+    ? variantImages[currentImageIndex].url 
+    : imageUrl;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -189,30 +228,71 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Image Gallery */}
         <div className="flex flex-col gap-4">
-          <div className="bg-card border border-card-border rounded-lg overflow-hidden">
-            {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt={`${product.name} - ${selectedVariant.color}`}
-                className="w-full h-96 object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.parentElement.innerHTML = `
-                    <div class="h-96 flex items-center justify-center">
-                      <div class="text-center">
-                        <span class="text-text-secondary text-lg block">${
-                          product.brand || "Product"
-                        }</span>
-                        <span class="text-text-secondary text-sm">Image Not Available</span>
+          {/* Main Image */}
+          <div className="bg-card border border-card-border rounded-lg overflow-hidden relative group">
+            {currentDisplayImage ? (
+              <>
+                <img
+                  key={currentImageIndex} // Force re-render on image change
+                  src={currentDisplayImage}
+                  alt={`${product.name}${selectedVariant?.color ? ` - ${selectedVariant.color}` : ''}`}
+                  className="w-full h-96 object-cover transition-opacity duration-300"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.parentElement.innerHTML = `
+                      <div class="h-96 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                        <div class="text-center">
+                          <svg class="w-16 h-16 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                          <span class="text-text-secondary text-lg block font-semibold">${product.brand || "Product"}</span>
+                          <span class="text-text-secondary text-sm">Image Not Available</span>
+                        </div>
                       </div>
-                    </div>
-                  `;
-                }}
-              />
+                    `;
+                  }}
+                />
+                {/* Image navigation arrows - show if multiple images */}
+                {variantImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentImageIndex((prev) => 
+                        prev === 0 ? variantImages.length - 1 : prev - 1
+                      )}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Previous image"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setCurrentImageIndex((prev) => 
+                        prev === variantImages.length - 1 ? 0 : prev + 1
+                      )}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Next image"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+                {/* Current variant badge */}
+                {selectedVariant?.color && (
+                  <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    {selectedVariant.color}
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="h-96 flex items-center justify-center">
+              <div className="h-96 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                 <div className="text-center">
-                  <span className="text-text-secondary text-lg block">
+                  <svg className="w-16 h-16 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-text-secondary text-lg block font-semibold">
                     {product.brand || "Product"}
                   </span>
                   <span className="text-text-secondary text-sm">
@@ -222,6 +302,50 @@ export default function ProductDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Thumbnail Gallery - Show different color variants */}
+          {variantImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {variantImages.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setCurrentImageIndex(index);
+                    // Also switch to the matching variant
+                    const matchingVariant = product.variants.find(
+                      v => v.color === img.color
+                    );
+                    if (matchingVariant) {
+                      handleVariantChange(matchingVariant.variant_id);
+                    }
+                  }}
+                  className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    index === currentImageIndex
+                      ? "border-secondary shadow-lg scale-105"
+                      : "border-card-border hover:border-primary"
+                  }`}
+                >
+                  <img
+                    src={img.url}
+                    alt={`${product.name} - ${img.color || 'variant'}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "";
+                    }}
+                  />
+                  {img.color && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs py-0.5 px-1 text-center truncate">
+                      {img.color}
+                    </div>
+                  )}
+                  {index === currentImageIndex && (
+                    <div className="absolute inset-0 border-2 border-secondary rounded-lg pointer-events-none"></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Details */}
@@ -236,11 +360,27 @@ export default function ProductDetailPage() {
           )}
           <div className="flex items-center mb-4 gap-2">
             <span
-              className={`font-semibold ${
-                isInStock ? "text-green-600" : "text-red-500"
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
+                isInStock 
+                  ? "bg-green-100 text-green-700 border border-green-300" 
+                  : "bg-orange-100 text-orange-700 border border-orange-300"
               }`}
             >
-              {isInStock ? "In Stock" : "Out of Stock"}
+              {isInStock ? (
+                <>
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  In Stock - Ships Immediately
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                  </svg>
+                  Available for Backorder
+                </>
+              )}
             </span>
           </div>
           {selectedVariant?.description && (
@@ -259,18 +399,22 @@ export default function ProductDetailPage() {
               {/* Color Selection */}
               {getUniqueAttributes("color").length > 0 && (
                 <div className="mb-4">
-                  <label className="text-md font-semibold text-text-primary mb-2 block">
+                  <label className="text-md font-semibold text-text-primary mb-3 block">
                     Color:{" "}
                     <span className="font-normal text-text-secondary">
                       {selectedVariant?.color}
                     </span>
                   </label>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-3 flex-wrap">
                     {getUniqueAttributes("color").map((color) => {
                       const isAvailable = product.variants.some(
                         (v) => v.color === color && v.stock_quantity > 0
                       );
                       const isSelected = selectedVariant?.color === color;
+                      
+                      // Get image for this color variant
+                      const colorVariant = product.variants.find(v => v.color === color);
+                      const colorImageUrl = colorVariant ? getImageUrl(colorVariant.image_url) : null;
 
                       return (
                         <button
@@ -280,18 +424,42 @@ export default function ProductDetailPage() {
                               findMatchingVariant("color", color)
                             )
                           }
-                          disabled={!isAvailable}
-                          className={`px-4 py-2 rounded-md text-sm font-semibold border-2 transition-all ${
+                          className={`group relative flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all ${
                             isSelected
-                              ? "border-secondary bg-secondary text-white shadow-md"
+                              ? "border-secondary bg-secondary text-white shadow-lg scale-105"
                               : isAvailable
-                              ? "border-card-border bg-card text-text-primary hover:border-primary"
-                              : "border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed"
+                              ? "border-card-border bg-card text-text-primary hover:border-primary hover:shadow-md"
+                              : "border-orange-300 bg-orange-50 text-orange-700 hover:border-orange-400"
                           }`}
                         >
-                          {color}
-                          {!isAvailable && (
-                            <span className="ml-1 text-xs">(Out of Stock)</span>
+                          {/* Small preview image */}
+                          {colorImageUrl && (
+                            <div className={`w-10 h-10 rounded overflow-hidden flex-shrink-0 border ${
+                              isSelected ? 'border-white' : 'border-gray-300'
+                            }`}>
+                              <img
+                                src={colorImageUrl}
+                                alt={color}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex flex-col items-start">
+                            <span className="text-sm font-semibold">{color}</span>
+                            {!isAvailable && (
+                              <span className="text-xs opacity-80">(Backorder)</span>
+                            )}
+                          </div>
+                          
+                          {/* Checkmark for selected */}
+                          {isSelected && (
+                            <svg className="w-4 h-4 ml-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                            </svg>
                           )}
                         </button>
                       );
@@ -324,18 +492,17 @@ export default function ProductDetailPage() {
                               findMatchingVariant("size", size)
                             )
                           }
-                          disabled={!isAvailable}
                           className={`px-4 py-2 rounded-md text-sm font-semibold border-2 transition-all ${
                             isSelected
                               ? "border-secondary bg-secondary text-white shadow-md"
                               : isAvailable
                               ? "border-card-border bg-card text-text-primary hover:border-primary"
-                              : "border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "border-orange-300 bg-orange-50 text-orange-700 hover:border-orange-400"
                           }`}
                         >
                           {size}
                           {!isAvailable && (
-                            <span className="ml-1 text-xs">(Out of Stock)</span>
+                            <span className="ml-1 text-xs">(Backorder)</span>
                           )}
                         </button>
                       );
@@ -352,15 +519,27 @@ export default function ProductDetailPage() {
                     <span className="font-mono">{selectedVariant?.sku}</span>
                   </span>
                   <span
-                    className={`font-semibold ${
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
                       selectedVariant?.stock_quantity > 0
-                        ? "text-green-600"
-                        : "text-red-500"
+                        ? "bg-green-100 text-green-700 border border-green-300"
+                        : "bg-orange-100 text-orange-700 border border-orange-300"
                     }`}
                   >
-                    {selectedVariant?.stock_quantity > 0
-                      ? "In Stock"
-                      : "Out of Stock"}
+                    {selectedVariant?.stock_quantity > 0 ? (
+                      <>
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                        </svg>
+                        In Stock
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                        </svg>
+                        Backorder
+                      </>
+                    )}
                   </span>
                 </div>
               </div>
@@ -387,23 +566,47 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Delivery Information */}
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className={`mb-6 p-4 rounded-lg border ${
+            isInStock 
+              ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800" 
+              : "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
+          }`}>
             <div className="flex items-start gap-3">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-6 h-6 mt-0.5 flex-shrink-0 ${
+                isInStock 
+                  ? "text-blue-600 dark:text-blue-400" 
+                  : "text-orange-600 dark:text-orange-400"
+              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
               </svg>
               <div>
-                <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">
-                  Estimated Delivery
+                <p className={`font-semibold mb-1 ${
+                  isInStock 
+                    ? "text-blue-800 dark:text-blue-300" 
+                    : "text-orange-800 dark:text-orange-300"
+                }`}>
+                  {isInStock ? "Estimated Delivery" : "Backorder - Estimated Delivery"}
                 </p>
-                <p className="text-sm text-blue-700 dark:text-blue-400">
+                <p className={`text-sm ${
+                  isInStock 
+                    ? "text-blue-700 dark:text-blue-400" 
+                    : "text-orange-700 dark:text-orange-400"
+                }`}>
                   {estimatedDelivery}
-                  {!isInStock && (
-                    <span className="block mt-1 text-xs text-blue-600 dark:text-blue-500">
-                      (Item currently out of stock - will be dispatched once available)
-                    </span>
-                  )}
                 </p>
+                {!isInStock && (
+                  <div className="mt-2 p-2 bg-white/50 dark:bg-black/20 rounded border border-orange-300 dark:border-orange-700">
+                    <p className="text-xs text-orange-800 dark:text-orange-300 font-semibold mb-1">
+                      📦 How Backorders Work:
+                    </p>
+                    <ul className="text-xs text-orange-700 dark:text-orange-400 space-y-0.5">
+                      <li>• You can order now and we'll ship when restocked</li>
+                      <li>• Additional 3 days added to standard delivery time</li>
+                      <li>• Payment processed at checkout as normal</li>
+                      <li>• You'll be notified when your order ships</li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -441,11 +644,9 @@ export default function ProductDetailPage() {
                     </svg>
                   </button>
                 </div>
-                {isInStock && (
-                  <span className="text-sm text-text-secondary">
-                    Available
-                  </span>
-                )}
+                <span className="text-sm text-text-secondary">
+                  {isInStock ? "In Stock" : "Backorder Available"}
+                </span>
               </div>
             </div>
           )}
@@ -456,23 +657,45 @@ export default function ProductDetailPage() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!isInStock}
-                  className="w-full bg-secondary text-white py-3 rounded-lg font-semibold text-lg hover:opacity-90 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className={`w-full py-3 rounded-lg font-semibold text-lg transition ${
+                    isInStock 
+                      ? "bg-secondary text-white hover:opacity-90" 
+                      : "bg-orange-500 text-white hover:bg-orange-600"
+                  }`}
                 >
-                  <i className="fas fa-shopping-cart mr-2"></i> Add to Cart
+                  <i className="fas fa-shopping-cart mr-2"></i> 
+                  {isInStock ? "Add to Cart" : "Add to Cart (Backorder)"}
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  disabled={!isInStock}
-                  className="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-secondary transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className={`w-full py-3 rounded-lg font-semibold text-lg transition ${
+                    isInStock 
+                      ? "bg-primary text-white hover:bg-secondary" 
+                      : "bg-orange-600 text-white hover:bg-orange-700"
+                  }`}
                 >
-                  Buy Now
+                  {isInStock ? "Buy Now" : "Backorder Now"}
                 </button>
               </div>
 
+              {!isInStock && (
+                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 rounded-md">
+                  <p className="text-sm text-orange-800 dark:text-orange-300 text-center">
+                    <svg className="w-5 h-5 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                    </svg>
+                    <strong>Item will ship when restocked.</strong> We'll process your payment now and send updates via email.
+                  </p>
+                </div>
+              )}
+
               {addedToCart && (
                 <div className="p-3 bg-green-100 border border-green-300 text-green-800 rounded-md text-center">
+                  <svg className="w-5 h-5 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
                   Successfully added {quantity} {quantity === 1 ? "item" : "items"} to cart!
+                  {!isInStock && " (Backorder)"}
                 </div>
               )}
             </div>

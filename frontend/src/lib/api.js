@@ -14,4 +14,7 @@ export async function getInventoryData() {
   }
 }
 
-export default { getInventoryData };
+// Named export for better ESLint compliance
+const apiLib = { getInventoryData };
+
+export default apiLib;

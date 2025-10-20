@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useCart } from "@/contexts/CartContext";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +10,7 @@ import { formatCurrency } from "@/utils/currency";
 import BackButton from "@/components/BackButton";
 import { getImageUrl } from "@/utils/imageUrl";
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const { cartItems, cartSubtotal, cartCount, clearCart, removeFromCart } =
     useCart();
   const { user } = useAuth();
@@ -1173,5 +1173,20 @@ export default function CheckoutPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-6 py-12">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-text-primary text-xl">Loading checkout...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }
