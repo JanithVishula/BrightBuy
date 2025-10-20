@@ -1,0 +1,10 @@
+{
+  "development": {
+    "apiUrl": "http://localhost:5001/api",
+    "backendUrl": "http://localhost:5001"
+  },
+  "production": {
+    "apiUrl": "https://gallant-friendship-production-4092.up.railway.app/api",
+    "backendUrl": "https://gallant-friendship-production-4092.up.railway.app"
+  }
+}

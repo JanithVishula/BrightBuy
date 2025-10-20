@@ -1,32 +1,50 @@
 // config/db.js
 const mysql = require("mysql2/promise");
+const path = require("path");
+const fs = require("fs");
 
-// Parse DATABASE_URL if provided, otherwise use individual variables
-let poolConfig;
+// Load configuration from links.json
+const linksPath = path.join(__dirname, "links.json");
+let config;
 
-if (process.env.DATABASE_URL) {
-  // Use DATABASE_URL if provided
-  poolConfig = {
-    uri: process.env.DATABASE_URL,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-  };
-} else {
-  // Fall back to individual environment variables
-  poolConfig = {
-    host: process.env.DB_HOST || "localhost",
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
+try {
+  const linksData = fs.readFileSync(linksPath, "utf8");
+  const links = JSON.parse(linksData);
+  
+  // Determine environment (production or development)
+  const env = process.env.NODE_ENV || "development";
+  config = links[env];
+  
+  console.log(`Loading database configuration for: ${env}`);
+} catch (error) {
+  console.error("Error loading links.json:", error.message);
+  console.log("Falling back to environment variables");
+  
+  // Fallback to environment variables if links.json not found
+  config = {
+    database: {
+      host: process.env.DB_HOST || "localhost",
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || "root",
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME || "brightbuy",
+    },
   };
 }
 
-const pool = mysql.createPool(poolConfig);
+// Create MySQL connection pool
+const pool = mysql.createPool({
+  host: config.database.host,
+  port: config.database.port,
+  user: config.database.user,
+  password: config.database.password,
+  database: config.database.database,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  // Enable SSL for production (Railway proxy)
+  ...(config.database.ssl && { ssl: config.database.ssl }),
+});
 
 pool
   .getConnection()

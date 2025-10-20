@@ -1,0 +1,38 @@
+{
+  "development": {
+    "database": {
+      "host": "localhost",
+      "port": 3306,
+      "user": "root",
+      "password": "1234",
+      "database": "brightbuy"
+    },
+    "server": {
+      "port": 5001,
+      "corsOrigin": ["http://localhost:3000", "http://localhost:3001"]
+    },
+    "jwt": {
+      "secret": "brightbuy_jwt_secret_key_2025"
+    }
+  },
+  "production": {
+    "database": {
+      "host": "maglev.proxy.rlwy.net",
+      "port": 25874,
+      "user": "root",
+      "password": "REPLACE_WITH_YOUR_RAILWAY_MYSQL_PASSWORD",
+      "database": "brightbuy",
+      "ssl": {
+        "rejectUnauthorized": false
+      }
+    },
+    "server": {
+      "port": 8080,
+      "corsOrigin": ["https://brightbuy-production.up.railway.app"]
+    },
+    "jwt": {
+      "secret": "brightbuy_production_jwt_secret_change_this_in_production"
+    },
+    "backendUrl": "https://gallant-friendship-production-4092.up.railway.app"
+  }
+}
