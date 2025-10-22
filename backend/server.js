@@ -18,7 +18,7 @@ try {
   const linksPath = path.join(__dirname, "config", "links.json");
   const linksData = fs.readFileSync(linksPath, "utf8");
   const links = JSON.parse(linksData);
-  
+
   const env = process.env.NODE_ENV || "development";
   config = links[env];
   console.log(`Loaded server configuration for: ${env}`);
@@ -38,12 +38,35 @@ try {
 
 // Middleware
 // Configure CORS to allow requests from specific origins
+// For Railway deployment, use CORS_ORIGIN environment variable if available
+let allowedOrigins = config.server.corsOrigin;
+
+// Override with environment variable if set (Railway deployment)
+if (process.env.CORS_ORIGIN) {
+  allowedOrigins = process.env.CORS_ORIGIN.split(",").map((origin) =>
+    origin.trim()
+  );
+  console.log("Using CORS_ORIGIN from environment:", allowedOrigins);
+} else {
+  console.log("Using CORS origins from config:", allowedOrigins);
+}
+
 const corsOptions = {
-  origin: config.server.corsOrigin,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or same-origin)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log("Blocked by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
