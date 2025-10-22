@@ -48,7 +48,19 @@ if (process.env.CORS_ORIGIN) {
   );
   console.log("Using CORS_ORIGIN from environment:", allowedOrigins);
 } else {
-  console.log("Using CORS origins from config:", allowedOrigins);
+  // For Railway production, always include the production frontend URL
+  if (process.env.NODE_ENV === "production") {
+    allowedOrigins = [
+      ...allowedOrigins,
+      "https://brightbuy-production.up.railway.app",
+    ];
+    console.log(
+      "Using production CORS origins (hardcoded + config):",
+      allowedOrigins
+    );
+  } else {
+    console.log("Using CORS origins from config:", allowedOrigins);
+  }
 }
 
 const corsOptions = {
