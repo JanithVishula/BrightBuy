@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
 
 export async function getInventoryData() {
   try {
@@ -14,4 +14,7 @@ export async function getInventoryData() {
   }
 }
 
-export default { getInventoryData };
+// Named export for better ESLint compliance
+const apiLib = { getInventoryData };
+
+export default apiLib;

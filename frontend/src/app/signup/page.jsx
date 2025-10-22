@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import styles from "../login/Auth.module.css";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({

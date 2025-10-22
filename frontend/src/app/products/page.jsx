@@ -1,7 +1,7 @@
 // src/app/products/page.jsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { productsAPI, categoriesAPI } from "@/services/api";
@@ -82,7 +82,7 @@ const ProductCard = ({ product }) => {
   );
 };
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search");
   const router = useRouter();
@@ -483,5 +483,20 @@ export default function ProductsPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-6 py-12">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-text-primary text-xl">Loading products...</p>
+        </div>
+      </div>
+    }>
+      <ProductsPageContent />
+    </Suspense>
   );
 }
