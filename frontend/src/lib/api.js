@@ -1,0 +1,20 @@
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
+
+export async function getInventoryData() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/inventory`);
+    if (!res.ok) {
+      // Fallback to empty structure
+      return { products: [], orders: [], summary: {} };
+    }
+    return res.json();
+  } catch (e) {
+    return { products: [], orders: [], summary: {} };
+  }
+}
+
+// Named export for better ESLint compliance
+const apiLib = { getInventoryData };
+
+export default apiLib;
