@@ -207,7 +207,7 @@ export default function HelpPage() {
         </div>
 
         {/* Contact Support */}
-        <div className="mt-8 bg-gradient-to-r from-primary to-secondary rounded-lg shadow-sm p-8 text-white">
+        <div className="mt-8 bg-primary rounded-lg shadow-sm p-8 text-white">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-2">Still need help?</h2>
             <p className="text-white/80 mb-6">

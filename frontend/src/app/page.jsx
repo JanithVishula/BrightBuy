@@ -142,7 +142,7 @@ export default function HomePage() {
     <div>
       {/* Welcome Section */}
       <section
-        className="relative bg-gradient-to-br from-primary via-primary to-secondary py-20 border-b border-card-border overflow-hidden"
+        className="relative bg-primary py-20 border-b border-card-border overflow-hidden"
         style={{ minHeight: "600px" }}
       >
         {/* Particles Background */}
@@ -255,7 +255,7 @@ export default function HomePage() {
               <div className="text-center animate-fade-in-up delay-500">
                 <Link
                   href="/products"
-                  className="inline-block bg-gradient-to-r from-primary to-secondary text-white px-12 py-4 rounded-full font-bold text-lg shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300"
+                  className="inline-block bg-secondary hover:bg-secondary-dark text-white px-12 py-4 rounded-lg font-bold text-lg shadow-soft transition-colors"
                 >
                   <i className="fas fa-arrow-right mr-2"></i>
                   Explore More Products
@@ -267,7 +267,7 @@ export default function HomePage() {
       </section>
 
       {/* Feature Widgets */}
-      <section className="py-16 bg-gradient-to-b from-background to-card">
+      <section className="py-16 bg-background">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featureWidgets.map((feature, index) => (
@@ -276,7 +276,7 @@ export default function HomePage() {
                 className="card text-center p-8 bg-card rounded-2xl border border-card-border shadow-lg hover:shadow-2xl animate-scale-in"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center animate-pulse-slow">
+                <div className="w-20 h-20 mx-auto mb-6 bg-primary rounded-full flex items-center justify-center">
                   <i className={`fas ${feature.icon} text-3xl text-white`}></i>
                 </div>
                 <h3 className="text-2xl font-bold text-text-primary mb-3">

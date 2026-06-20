@@ -12,8 +12,8 @@ const Footer = () => {
         color: "var(--color-footer-text)",
       }}
     >
-      {/* Decorative top border */}
-      <div className="h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
+      {/* Top border */}
+      <div className="h-0.5 bg-primary"></div>
 
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">

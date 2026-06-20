@@ -232,7 +232,7 @@ export default function ProfileDetailsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-primary to-secondary rounded-lg shadow-sm p-8 text-white">
+        <div className="bg-primary rounded-lg shadow-sm p-8 text-white">
           <div className="grid grid-cols-3 gap-6 text-center">
             <div>
               <p className="text-white/80 text-sm mb-1">Account Status</p>

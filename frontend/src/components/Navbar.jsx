@@ -13,7 +13,7 @@ const Navbar = () => {
   const { user } = useAuth();
 
   return (
-    <header className="bg-gradient-to-r from-card via-card to-background shadow-lg sticky top-0 z-50 border-b-2 border-primary/20 backdrop-blur-sm">
+    <header className="bg-card shadow-sm sticky top-0 z-50 border-b border-card-border">
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center gap-6">
           {/* Left Section: Logo (pulled hard-left) + User Info */}
@@ -36,7 +36,7 @@ const Navbar = () => {
 
             {user && (
               <div className="hidden lg:flex items-center space-x-3 px-4 py-2 bg-background rounded-full border border-card-border shadow-sm">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
                   {user.name?.charAt(0).toUpperCase() || "U"}
                 </div>
                 <div className="text-sm text-text-primary">
@@ -69,7 +69,7 @@ const Navbar = () => {
               >
                 <i className="fas fa-shopping-cart text-xl text-text-secondary group-hover:text-secondary transition-colors"></i>
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-br from-secondary to-secondary-dark text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse-slow">
+                  <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
                     {cartCount}
                   </span>
                 )}
@@ -81,7 +81,7 @@ const Navbar = () => {
               user.role === "staff" ? (
                 <Link
                   href="/staff/dashboard"
-                  className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-full font-semibold hover:shadow-xl transition-all duration-300 flex items-center space-x-2 hover:scale-105"
+                  className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg font-semibold transition-colors flex items-center space-x-2"
                 >
                   <i className="fas fa-user-tie"></i>
                   <span>Staff Dashboard</span>
@@ -89,7 +89,7 @@ const Navbar = () => {
               ) : (
                 <Link
                   href="/profile"
-                  className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-full font-semibold hover:shadow-xl transition-all duration-300 flex items-center space-x-2 hover:scale-105"
+                  className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg font-semibold transition-colors flex items-center space-x-2"
                 >
                   <i className="fas fa-user-circle"></i>
                   <span className="hidden md:inline">
@@ -100,7 +100,7 @@ const Navbar = () => {
             ) : (
               <Link
                 href="/login"
-                className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-3 rounded-full font-bold hover:shadow-2xl transition-all duration-300 flex items-center space-x-2 hover:scale-105"
+                className="bg-primary hover:bg-primary-dark text-white px-8 py-2.5 rounded-lg font-bold transition-colors flex items-center space-x-2"
               >
                 <i className="fas fa-sign-in-alt"></i>
                 <span>Login</span>
@@ -109,9 +109,6 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-
-      {/* Subtle animated line under navbar */}
-      <div className="h-1 bg-gradient-to-r from-transparent via-secondary to-transparent animate-shimmer"></div>
     </header>
   );
 };

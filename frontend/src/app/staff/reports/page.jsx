@@ -741,7 +741,7 @@ export default function StaffReports() {
                       quarterlySales.map((quarter) => (
                         <div
                           key={quarter.quarter}
-                          className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg"
+                          className="bg-background border border-card-border p-6 rounded-lg"
                         >
                           <h3 className="text-lg font-bold text-gray-900 mb-2">
                             Q{quarter.quarter} {selectedYear}
@@ -985,7 +985,7 @@ export default function StaffReports() {
                       categoryOrders.map((category) => (
                         <div
                           key={category.category_id}
-                          className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-lg"
+                          className="bg-background border border-card-border p-5 rounded-lg"
                         >
                           <h3 className="text-lg font-bold text-gray-900 mb-2">
                             {category.category_name}
