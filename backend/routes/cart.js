@@ -12,9 +12,8 @@ const {
 } = require("../controllers/cartController");
 const { authenticate } = require("../middleware/authMiddleware");
 
-// SECURITY: a customer may only touch their OWN cart. The target customer id
-// can arrive as a route param, query string, or body field depending on the
-// endpoint — all are checked against the authenticated user's customerId.
+// SECURITY: a customer may only touch their OWN cart. This runs as a
+// ROUTE-level middleware (not router.use) so req.params is populated.
 const authorizeCartOwner = (req, res, next) => {
   const body = req.body || {};
   const target =
@@ -37,34 +36,34 @@ const authorizeCartOwner = (req, res, next) => {
   next();
 };
 
-// All cart routes require authentication + ownership.
-router.use(authenticate, authorizeCartOwner);
+// Apply auth + ownership to every cart route individually.
+const guard = [authenticate, authorizeCartOwner];
 
 // @route   GET /api/cart  (current customer)
-router.get("/", getCartDetails);
+router.get("/", guard, getCartDetails);
 
 // @route   POST /api/cart/items
-router.post("/items", addToCart);
+router.post("/items", guard, addToCart);
 
 // @route   GET /api/cart/:customerId
-router.get("/:customerId", getCartDetails);
+router.get("/:customerId", guard, getCartDetails);
 
 // @route   GET /api/cart/:customerId/summary
-router.get("/:customerId/summary", getCartSummary);
+router.get("/:customerId/summary", guard, getCartSummary);
 
 // @route   GET /api/cart/:customerId/count
-router.get("/:customerId/count", getCartItemCount);
+router.get("/:customerId/count", guard, getCartItemCount);
 
 // @route   POST /api/cart/:customerId/items
-router.post("/:customerId/items", addToCart);
+router.post("/:customerId/items", guard, addToCart);
 
 // @route   PUT /api/cart/:customerId/items/:variantId
-router.put("/:customerId/items/:variantId", updateCartItem);
+router.put("/:customerId/items/:variantId", guard, updateCartItem);
 
 // @route   DELETE /api/cart/:customerId/items/:variantId
-router.delete("/:customerId/items/:variantId", removeCartItem);
+router.delete("/:customerId/items/:variantId", guard, removeCartItem);
 
 // @route   DELETE /api/cart/:customerId
-router.delete("/:customerId", clearCart);
+router.delete("/:customerId", guard, clearCart);
 
 module.exports = router;
