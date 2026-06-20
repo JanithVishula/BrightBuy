@@ -262,37 +262,42 @@ exports.updateInventory = async (req, res) => {
       });
     }
 
-    console.log(`[${requestId}] Starting transaction...`);
-    await db.query("START TRANSACTION");
-
+    // NOTE: a database trigger (trg_inventory_update_before_insert) applies the
+    // quantity change to the Inventory table automatically when we insert into
+    // Inventory_updates. We must NOT also update Inventory here, or the change
+    // would be applied twice (the stock-doubling bug).
+    const connection = await db.getConnection();
     try {
-      // Update Inventory table
-      console.log(`[${requestId}] Updating Inventory table...`);
-      await db.query("UPDATE Inventory SET quantity = ? WHERE variant_id = ?", [
-        newQuantity,
-        variantId,
-      ]);
+      await connection.beginTransaction();
 
-      // Insert into Inventory_updates table for tracking
-      console.log(`[${requestId}] Inserting into Inventory_updates...`);
-      await db.query(
+      // Insert the audit row; the trigger updates Inventory and sets old_quantity.
+      console.log(`[${requestId}] Inserting into Inventory_updates (trigger updates stock)...`);
+      await connection.execute(
         "INSERT INTO Inventory_updates (variant_id, staff_id, old_quantity, added_quantity, note) VALUES (?, ?, ?, ?, ?)",
         [variantId, staffId, currentQuantity, quantityChange, notes || null]
       );
 
-      console.log(`[${requestId}] Committing transaction...`);
-      await db.query("COMMIT");
+      // Read back the authoritative quantity the trigger produced.
+      const [rows] = await connection.execute(
+        "SELECT quantity FROM Inventory WHERE variant_id = ?",
+        [variantId]
+      );
+      const updatedQuantity = rows.length ? rows[0].quantity : newQuantity;
 
-      console.log(`[${requestId}] ===== UPDATE SUCCESS =====`);
+      await connection.commit();
+      console.log(`[${requestId}] ===== UPDATE SUCCESS (new qty=${updatedQuantity}) =====`);
+
       res.json({
         success: true,
         message: "Inventory updated successfully",
-        newQuantity,
+        newQuantity: updatedQuantity,
       });
     } catch (err) {
       console.error(`[${requestId}] Transaction error:`, err);
-      await db.query("ROLLBACK");
+      await connection.rollback();
       throw err;
+    } finally {
+      connection.release();
     }
   } catch (error) {
     console.error(`[${requestId}] Update inventory error:`, error);
@@ -402,6 +407,70 @@ exports.getCustomerDetails = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error. Please try again later.",
+    });
+  }
+};
+
+// Delete a single product variant
+exports.deleteVariant = async (req, res) => {
+  try {
+    const { variantId } = req.params;
+
+    // Ensure the variant exists
+    const [variant] = await db.query(
+      "SELECT variant_id, product_id FROM ProductVariant WHERE variant_id = ?",
+      [variantId]
+    );
+    if (variant.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Variant not found" });
+    }
+
+    // Block deletion if the variant is referenced by any order
+    const [orderCheck] = await db.query(
+      "SELECT COUNT(*) as count FROM Order_item WHERE variant_id = ?",
+      [variantId]
+    );
+    if (orderCheck[0].count > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cannot delete variant - it has been ordered by customers. Set its stock to 0 instead.",
+      });
+    }
+
+    // Block deletion if the variant is currently in a cart
+    const [cartCheck] = await db.query(
+      "SELECT COUNT(*) as count FROM Cart_item WHERE variant_id = ?",
+      [variantId]
+    );
+    if (cartCheck[0].count > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cannot delete variant - it is currently in customer carts. Please try again later.",
+      });
+    }
+
+    // Delete (Inventory + Inventory_updates cascade via FK on variant_id)
+    await db.query("DELETE FROM ProductVariant WHERE variant_id = ?", [
+      variantId,
+    ]);
+
+    res.json({ success: true, message: "Variant removed successfully" });
+  } catch (error) {
+    console.error("Delete variant error:", error);
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete variant - it is referenced in orders or carts.",
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+      error: error.message,
     });
   }
 };

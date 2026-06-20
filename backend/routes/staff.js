@@ -50,6 +50,14 @@ router.delete(
   staffController.deleteProduct
 );
 
+// Delete a single product variant (All staff)
+router.delete(
+  "/product-variants/:variantId",
+  authenticate,
+  authorizeStaff,
+  staffController.deleteVariant
+);
+
 // Customer management routes (All staff)
 router.get(
   "/customers",

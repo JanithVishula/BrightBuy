@@ -258,7 +258,7 @@ export default function InventoryManagement() {
       console.error("Remove variant error:", error);
       setMessage({
         type: "error",
-        text: "This feature requires backend API support",
+        text: error.message || "Failed to remove variant",
       });
     } finally {
       setUpdating(false);
@@ -451,7 +451,7 @@ export default function InventoryManagement() {
     } catch (error) {
       setMessage({
         type: "error",
-        text: "This feature requires backend API support",
+        text: error.message || "Failed to remove product",
       });
     } finally {
       setUpdating(false);
