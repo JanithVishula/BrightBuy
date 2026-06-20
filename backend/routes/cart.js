@@ -16,8 +16,9 @@ const { authenticate } = require("../middleware/authMiddleware");
 // can arrive as a route param, query string, or body field depending on the
 // endpoint — all are checked against the authenticated user's customerId.
 const authorizeCartOwner = (req, res, next) => {
+  const body = req.body || {};
   const target =
-    req.params.customerId || req.query.customer_id || req.body.customer_id;
+    req.params.customerId || req.query.customer_id || body.customer_id;
 
   // Staff are not customers and have no cart; block them explicitly.
   if (req.user.role !== "customer" || !req.user.customerId) {
