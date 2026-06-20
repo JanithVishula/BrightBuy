@@ -1,28 +1,32 @@
 const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/orderController");
-const { authenticate } = require("../middleware/authMiddleware");
+const {
+  authenticate,
+  authorizeStaff,
+} = require("../middleware/authMiddleware");
 
-// Create a new order
+// Create a new order (authenticated customer; order is bound to their account)
 router.post("/", authenticate, orderController.createOrder);
 
-// Get all orders (for staff)
-router.get("/all", authenticate, orderController.getAllOrders);
+// Get all orders (staff only)
+router.get("/all", authenticate, authorizeStaff, orderController.getAllOrders);
 
-// Get order by ID
+// Get order by ID (owner or staff — enforced in controller)
 router.get("/:order_id", authenticate, orderController.getOrderById);
 
-// Get orders by customer ID
+// Get orders by customer ID (owner or staff — enforced in controller)
 router.get(
   "/customer/:customer_id",
   authenticate,
   orderController.getOrdersByCustomer
 );
 
-// Update order status
+// Update order status (staff only)
 router.patch(
   "/:order_id/status",
   authenticate,
+  authorizeStaff,
   orderController.updateOrderStatus
 );
 
@@ -30,13 +34,15 @@ router.patch(
 router.put(
   "/:order_id/status",
   authenticate,
+  authorizeStaff,
   orderController.updateOrderStatus
 );
 
-// Update shipment information (for staff)
+// Update shipment information (staff only)
 router.put(
   "/:order_id/shipment",
   authenticate,
+  authorizeStaff,
   orderController.updateShipmentInfo
 );
 

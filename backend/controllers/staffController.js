@@ -358,17 +358,17 @@ exports.getCustomerDetails = async (req, res) => {
 
     // Get customer orders
     const [orders] = await db.query(
-      `SELECT 
+      `SELECT
         o.order_id,
-        o.order_date,
-        o.total_price,
+        o.created_at AS order_date,
+        o.total AS total_price,
         o.status,
         COUNT(oi.order_item_id) as item_count
       FROM Orders o
       LEFT JOIN Order_item oi ON o.order_id = oi.order_id
       WHERE o.customer_id = ?
       GROUP BY o.order_id
-      ORDER BY o.order_date DESC`,
+      ORDER BY o.created_at DESC`,
       [customerId]
     );
 

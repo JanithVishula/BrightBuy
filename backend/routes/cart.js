@@ -10,50 +10,60 @@ const {
   clearCart,
   getCartItemCount,
 } = require("../controllers/cartController");
+const { authenticate } = require("../middleware/authMiddleware");
 
-// @route   GET /api/cart (with ?customer_id=X)
-// @desc    Get cart details with items for customer
-// @access  Public
+// SECURITY: a customer may only touch their OWN cart. The target customer id
+// can arrive as a route param, query string, or body field depending on the
+// endpoint — all are checked against the authenticated user's customerId.
+const authorizeCartOwner = (req, res, next) => {
+  const target =
+    req.params.customerId || req.query.customer_id || req.body.customer_id;
+
+  // Staff are not customers and have no cart; block them explicitly.
+  if (req.user.role !== "customer" || !req.user.customerId) {
+    return res
+      .status(403)
+      .json({ message: "Only customers can access a cart." });
+  }
+
+  // If a target id is supplied it must match the logged-in customer.
+  if (target && Number(target) !== Number(req.user.customerId)) {
+    return res.status(403).json({ message: "Access denied to this cart." });
+  }
+
+  // Force the customer id to the authenticated user for downstream handlers.
+  req.params.customerId = String(req.user.customerId);
+  next();
+};
+
+// All cart routes require authentication + ownership.
+router.use(authenticate, authorizeCartOwner);
+
+// @route   GET /api/cart  (current customer)
 router.get("/", getCartDetails);
 
 // @route   POST /api/cart/items
-// @desc    Add item to customer's cart
-// @access  Public
 router.post("/items", addToCart);
 
 // @route   GET /api/cart/:customerId
-// @desc    Get cart details with items
-// @access  Public
 router.get("/:customerId", getCartDetails);
 
 // @route   GET /api/cart/:customerId/summary
-// @desc    Get cart summary
-// @access  Public
 router.get("/:customerId/summary", getCartSummary);
 
 // @route   GET /api/cart/:customerId/count
-// @desc    Get cart item count
-// @access  Public
 router.get("/:customerId/count", getCartItemCount);
 
 // @route   POST /api/cart/:customerId/items
-// @desc    Add item to cart
-// @access  Public
 router.post("/:customerId/items", addToCart);
 
 // @route   PUT /api/cart/:customerId/items/:variantId
-// @desc    Update cart item quantity
-// @access  Public
 router.put("/:customerId/items/:variantId", updateCartItem);
 
 // @route   DELETE /api/cart/:customerId/items/:variantId
-// @desc    Remove item from cart
-// @access  Public
 router.delete("/:customerId/items/:variantId", removeCartItem);
 
 // @route   DELETE /api/cart/:customerId
-// @desc    Clear all items from cart
-// @access  Public
 router.delete("/:customerId", clearCart);
 
 module.exports = router;

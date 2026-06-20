@@ -185,24 +185,48 @@ export const login = authAPI.login;
 export const signup = authAPI.signup;
 
 // Cart API
+// Read the stored auth token (cart/order endpoints are now protected).
+const getAuthToken = () => {
+  if (typeof window === "undefined") return null;
+  return (
+    localStorage.getItem("bb_token") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken")
+  );
+};
+
+const authHeaders = (extra = {}) => {
+  const token = getAuthToken();
+  return {
+    ...extra,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
+
 export const cartAPI = {
   // Get cart details for customer
   getCartDetails: async (customerId) => {
-    const response = await fetch(`${API_BASE_URL}/cart/${customerId}`);
+    const response = await fetch(`${API_BASE_URL}/cart/${customerId}`, {
+      headers: authHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch cart details");
     return response.json();
   },
 
   // Get cart summary for customer
   getCartSummary: async (customerId) => {
-    const response = await fetch(`${API_BASE_URL}/cart/${customerId}/summary`);
+    const response = await fetch(`${API_BASE_URL}/cart/${customerId}/summary`, {
+      headers: authHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch cart summary");
     return response.json();
   },
 
   // Get cart item count for customer
   getCartItemCount: async (customerId) => {
-    const response = await fetch(`${API_BASE_URL}/cart/${customerId}/count`);
+    const response = await fetch(`${API_BASE_URL}/cart/${customerId}/count`, {
+      headers: authHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch cart count");
     return response.json();
   },
@@ -211,9 +235,7 @@ export const cartAPI = {
   addToCart: async (customerId, variantId, quantity = 1) => {
     const response = await fetch(`${API_BASE_URL}/cart/${customerId}/items`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ variant_id: variantId, quantity }),
     });
     if (!response.ok) throw new Error("Failed to add item to cart");
@@ -226,9 +248,7 @@ export const cartAPI = {
       `${API_BASE_URL}/cart/${customerId}/items/${variantId}`,
       {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ quantity }),
       }
     );
@@ -242,6 +262,7 @@ export const cartAPI = {
       `${API_BASE_URL}/cart/${customerId}/items/${variantId}`,
       {
         method: "DELETE",
+        headers: authHeaders(),
       }
     );
     if (!response.ok) throw new Error("Failed to remove item from cart");
@@ -252,6 +273,7 @@ export const cartAPI = {
   clearCart: async (customerId) => {
     const response = await fetch(`${API_BASE_URL}/cart/${customerId}`, {
       method: "DELETE",
+      headers: authHeaders(),
     });
     if (!response.ok) throw new Error("Failed to clear cart");
     return response.json();

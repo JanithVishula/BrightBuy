@@ -6,29 +6,26 @@ const createOrder = async (req, res) => {
 
   try {
     const {
-      customer_id,
       address_id,
       delivery_mode,
       delivery_zip,
       payment_method,
-      items, // Array of { variant_id, quantity, unit_price }
-      sub_total,
-      delivery_fee,
-      total,
+      items, // Array of { variant_id, quantity } — prices are computed server-side
     } = req.body;
 
+    // SECURITY: the order is always created for the AUTHENTICATED customer,
+    // never a customer_id supplied in the body.
+    const customer_id = req.user.customerId;
+    if (!customer_id) {
+      return res.status(403).json({
+        error: "Only customers can place orders.",
+      });
+    }
+
     // Validate required fields
-    if (
-      !customer_id ||
-      !delivery_mode ||
-      !items ||
-      items.length === 0 ||
-      !sub_total ||
-      !total
-    ) {
+    if (!delivery_mode || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
-        error:
-          "Missing required fields: customer_id, delivery_mode, items, sub_total, total",
+        error: "Missing required fields: delivery_mode, items",
       });
     }
 
@@ -47,82 +44,110 @@ const createOrder = async (req, res) => {
 
     await connection.beginTransaction();
 
-    // 1. Insert the order
+    // 1. SECURITY: recompute every line price from the database. The client's
+    //    unit_price / sub_total / total are ignored entirely.
+    let sub_total = 0;
+    let hasOutOfStockItems = false;
+    const pricedItems = [];
+
+    for (const item of items) {
+      const variantId = Number(item.variant_id);
+      const quantity = Number(item.quantity);
+
+      if (!variantId || !Number.isInteger(quantity) || quantity <= 0) {
+        throw new Error("Each item must have a valid variant_id and quantity");
+      }
+
+      // Authoritative price from ProductVariant
+      const [variantRows] = await connection.execute(
+        `SELECT pv.price, COALESCE(i.quantity, 0) AS stock
+         FROM ProductVariant pv
+         LEFT JOIN Inventory i ON pv.variant_id = i.variant_id
+         WHERE pv.variant_id = ?`,
+        [variantId]
+      );
+
+      if (variantRows.length === 0) {
+        throw new Error(`Variant ${variantId} not found`);
+      }
+
+      const unitPrice = Number(variantRows[0].price);
+      if (variantRows[0].stock < quantity) {
+        hasOutOfStockItems = true; // allowed (backorder), affects delivery estimate
+      }
+
+      sub_total += unitPrice * quantity;
+      pricedItems.push({ variantId, quantity, unitPrice });
+    }
+
+    sub_total = Math.round(sub_total * 100) / 100;
+    // delivery_fee is computed by a DB trigger on insert; total is finalized after.
+    const total = sub_total;
+
+    // 2. Insert the order (delivery_fee left to the trigger; total updated below)
     const [orderResult] = await connection.execute(
       `INSERT INTO Orders (
-        customer_id, 
-        address_id, 
-        delivery_mode, 
-        delivery_zip, 
-        status, 
-        sub_total, 
-        delivery_fee, 
+        customer_id,
+        address_id,
+        delivery_mode,
+        delivery_zip,
+        status,
+        sub_total,
+        delivery_fee,
         total
-      ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, 'pending', ?, 0, ?)`,
       [
         customer_id,
         address_id || null,
         delivery_mode,
         delivery_zip || null,
         sub_total,
-        delivery_fee || 0,
         total,
       ]
     );
 
     const order_id = orderResult.insertId;
 
-    // 2. Check stock status for all items (to determine delivery delay)
-    let hasOutOfStockItems = false;
-    for (const item of items) {
-      if (!item.variant_id || !item.quantity || !item.unit_price) {
-        throw new Error(
-          "Each item must have variant_id, quantity, and unit_price"
-        );
-      }
+    // 3. Read back the delivery_fee the trigger computed, then finalize total
+    const [feeRow] = await connection.execute(
+      `SELECT delivery_fee FROM Orders WHERE order_id = ?`,
+      [order_id]
+    );
+    const delivery_fee = Number(feeRow[0].delivery_fee) || 0;
+    const finalTotal = Math.round((sub_total + delivery_fee) * 100) / 100;
+    await connection.execute(
+      `UPDATE Orders SET total = ? WHERE order_id = ?`,
+      [finalTotal, order_id]
+    );
 
-      // Check current stock
-      const [inventoryCheck] = await connection.execute(
-        `SELECT quantity FROM Inventory WHERE variant_id = ?`,
-        [item.variant_id]
-      );
-
-      if (inventoryCheck.length === 0) {
-        throw new Error(`Variant ${item.variant_id} not found in inventory`);
-      }
-
-      // Check if any item is out of stock
-      if (inventoryCheck[0].quantity < item.quantity) {
-        hasOutOfStockItems = true;
-      }
-    }
-
-    // 3. Insert order items and update inventory
-    for (const item of items) {
+    // 4. Insert order items (server-priced) and deduct inventory
+    for (const item of pricedItems) {
       await connection.execute(
-        `INSERT INTO Order_item (order_id, variant_id, quantity, unit_price) 
+        `INSERT INTO Order_item (order_id, variant_id, quantity, unit_price)
          VALUES (?, ?, ?, ?)`,
-        [order_id, item.variant_id, item.quantity, item.unit_price]
+        [order_id, item.variantId, item.quantity, item.unitPrice]
       );
 
       // Deduct from inventory (allow negative stock for backorders)
       await connection.execute(
-        `UPDATE Inventory 
-         SET quantity = quantity - ? 
-         WHERE variant_id = ?`,
-        [item.quantity, item.variant_id]
+        `UPDATE Inventory SET quantity = quantity - ? WHERE variant_id = ?`,
+        [item.quantity, item.variantId]
       );
     }
 
-    // 4. Create payment record
-    // Card payments are marked as 'paid' directly, Cash on Delivery is 'pending'
+    // 5. Create payment record using the server-computed total
     const paymentStatus =
       payment_method === "Card Payment" ? "paid" : "pending";
 
     const [paymentResult] = await connection.execute(
-      `INSERT INTO Payment (order_id, method, amount, status) 
+      `INSERT INTO Payment (order_id, method, amount, status)
        VALUES (?, ?, ?, ?)`,
-      [order_id, payment_method || "Cash on Delivery", total, paymentStatus]
+      [
+        order_id,
+        payment_method || "Cash on Delivery",
+        finalTotal,
+        paymentStatus,
+      ]
     );
 
     const payment_id = paymentResult.insertId;
@@ -227,12 +252,20 @@ const getOrderById = async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
+    // SECURITY: customers may only view their own orders; staff may view any.
+    if (
+      req.user.role !== "staff" &&
+      orders[0].customer_id !== req.user.customerId
+    ) {
+      return res.status(403).json({ error: "Access denied." });
+    }
+
     const [orderItems] = await db.execute(
-      `SELECT oi.*, 
-              pv.sku, 
+      `SELECT oi.*,
+              pv.sku,
               pv.color,
               pv.size,
-              p.name as product_name, 
+              p.name as product_name,
               p.brand
        FROM Order_item oi
        JOIN ProductVariant pv ON oi.variant_id = pv.variant_id
@@ -258,6 +291,14 @@ const getOrderById = async (req, res) => {
 const getOrdersByCustomer = async (req, res) => {
   try {
     const { customer_id } = req.params;
+
+    // SECURITY: customers may only list their own orders; staff may list any.
+    if (
+      req.user.role !== "staff" &&
+      Number(customer_id) !== req.user.customerId
+    ) {
+      return res.status(403).json({ error: "Access denied." });
+    }
 
     // Get orders with full details
     const [orders] = await db.execute(

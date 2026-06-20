@@ -69,28 +69,6 @@ exports.isCustomer = (req, res, next) => {
   next();
 };
 
-// Middleware to check if user is admin or manager
-exports.isStaff = (req, res, next) => {
-  if (!req.user || !["admin", "manager"].includes(req.user.role)) {
-    return res.status(403).json({
-      success: false,
-      message: "Access denied. Staff access only.",
-    });
-  }
-  next();
-};
-
-// Middleware to check if user is admin
-exports.isAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Access denied. Admin access only.",
-    });
-  }
-  next();
-};
-
 // Middleware to check if user is staff (any level)
 exports.authorizeStaff = (req, res, next) => {
   if (!req.user || req.user.role !== "staff") {

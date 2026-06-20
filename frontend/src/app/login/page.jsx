@@ -57,22 +57,14 @@ export default function LoginPage() {
           localStorage.setItem("customer_id", response.user.customer_id);
         }
 
-        // Role-based redirect
+        // Role-based redirect (only customer and staff roles exist)
         switch (response.user.role) {
-          case "customer":
-            router.push("/"); // Customer dashboard or home
-            break;
-          case "admin":
-            router.push("/admin/dashboard");
-            break;
-          case "manager":
-            router.push("/manager/dashboard");
-            break;
           case "staff":
             router.push("/staff/dashboard");
             break;
+          case "customer":
           default:
-            router.push("/");
+            router.push("/"); // Customer home
         }
       }
     } catch (err) {

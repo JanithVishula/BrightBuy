@@ -99,6 +99,13 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Lightweight keep-alive ping (no DB work) — point an external uptime
+// monitor (e.g. cron-job.org, UptimeRobot) at this every ~5 min to reduce
+// cold starts on hosts that sleep idle services.
+app.get("/api/ping", (req, res) => {
+  res.status(200).send("pong");
+});
+
 const PORT = config.server.port;
 
 // Listen on all network interfaces (0.0.0.0) to allow LAN access
