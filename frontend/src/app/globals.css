@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 
 @tailwind base;
@@ -7,37 +7,44 @@
 
 
 :root {
-  /* Light Mode (Default) */
-  --color-primary: #002152;
-  --color-secondary: #F9560B;
-  --color-background: #f8fafc; 
+  /* Light Mode — Blue + Pure Orange */
+  --color-primary: #1565D8;        /* vivid blue */
+  --color-primary-dark: #0F4FB0;   /* blue hover/active */
+  --color-secondary: #FF6B00;      /* pure orange */
+  --color-secondary-dark: #E85F00; /* orange hover */
+  --color-background: #F6F8FC;      /* soft blue-tinted gray */
   --color-card: #ffffff;
-  --color-card-border: #e2e8f0;
-  --color-text-primary: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-footer-bg: #DBD3C0;
-  --color-footer-text: #002152;
+  --color-card-border: #E3E8F0;
+  --color-text-primary: #0F1B2D;
+  --color-text-secondary: #5B6B82;
+  --color-footer-bg: #0F1B2D;
+  --color-footer-text: #C7D2E0;
 }
 
 
 .dark {
-  /* Dark Mode */
-  --color-primary: #F9560B;
-  --color-secondary: #DBD3C0;
-  --color-background: #0f172a;
-  --color-card: #1e293b;
-  --color-card-border: #334155;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-footer-bg: #1e293b;
-  --color-footer-text: #94a3b8;
+  /* Dark Mode — Blue + Pure Orange */
+  --color-primary: #3B82F6;        /* brighter blue for dark bg */
+  --color-primary-dark: #2563EB;
+  --color-secondary: #FF7A1A;      /* warm orange */
+  --color-secondary-dark: #FF6B00;
+  --color-background: #0B1220;
+  --color-card: #131D2E;
+  --color-card-border: #25324A;
+  --color-text-primary: #EEF3FA;
+  --color-text-secondary: #97A6BF;
+  --color-footer-bg: #0B1220;
+  --color-footer-text: #97A6BF;
 }
 
 
 body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
   transition-property: color, background-color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 300ms;
@@ -207,27 +214,38 @@ button:hover, a:hover {
 
 /* Base styles for buttons to make them theme-aware */
 .btn-primary {
-    @apply bg-primary text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200;
+    @apply bg-primary text-white font-semibold py-2.5 px-5 rounded-lg shadow-soft transition-all duration-200;
 }
 
 
 .btn-primary:hover {
-    @apply bg-secondary;
+    @apply bg-primary-dark shadow-soft-lg;
 }
 
 
 .btn-primary:disabled {
-    @apply bg-gray-400 cursor-not-allowed;
+    @apply bg-gray-400 cursor-not-allowed shadow-none;
+}
+
+
+/* Orange accent button (calls-to-action like "Add to Cart") */
+.btn-accent {
+    @apply bg-secondary text-white font-semibold py-2.5 px-5 rounded-lg shadow-soft transition-all duration-200;
+}
+
+
+.btn-accent:hover {
+    @apply bg-secondary-dark shadow-soft-lg;
 }
 
 
 .btn-secondary {
-    @apply bg-card text-text-secondary font-semibold py-2 px-4 rounded-md border border-card-border transition-colors duration-200;
+    @apply bg-card text-text-primary font-semibold py-2.5 px-5 rounded-lg border border-card-border transition-all duration-200;
 }
 
 
 .btn-secondary:hover {
-    @apply bg-background border-secondary text-secondary;
+    @apply border-primary text-primary;
 }
 
 @layer components {

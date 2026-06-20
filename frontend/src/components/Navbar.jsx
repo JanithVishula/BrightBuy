@@ -74,7 +74,7 @@ const Navbar = () => {
               >
                 <i className="fas fa-shopping-cart text-xl text-text-secondary group-hover:text-secondary transition-colors"></i>
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-br from-secondary to-orange-600 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse-slow">
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-br from-secondary to-secondary-dark text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse-slow">
                     {cartCount}
                   </span>
                 )}
