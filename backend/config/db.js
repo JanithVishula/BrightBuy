@@ -1,83 +1,61 @@
 // config/db.js
+// Database connection — configured ENTIRELY via environment variables.
+// Supports DB_* (preferred) and MYSQL* (Railway-style) variable names.
 const mysql = require("mysql2/promise");
-const path = require("path");
-const fs = require("fs");
 
-// Load configuration from links.json
-const linksPath = path.join(__dirname, "links.json");
-let config;
+const dbConfig = {
+  host: process.env.DB_HOST || process.env.MYSQLHOST || "localhost",
+  port: Number(process.env.DB_PORT || process.env.MYSQLPORT || 3306),
+  user: process.env.DB_USER || process.env.MYSQLUSER || "root",
+  password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || "",
+  database: process.env.DB_NAME || process.env.MYSQLDATABASE || "brightbuy",
+};
 
-try {
-  const linksData = fs.readFileSync(linksPath, "utf8");
-  const links = JSON.parse(linksData);
+// Enable SSL when DB_SSL=true (required by managed hosts like Aiven).
+// rejectUnauthorized:false lets us connect without bundling the CA cert;
+// set DB_SSL_REJECT_UNAUTHORIZED=true and provide a CA for stricter checks.
+const sslEnabled =
+  String(process.env.DB_SSL).toLowerCase() === "true" ||
+  String(process.env.MYSQL_SSL).toLowerCase() === "true";
 
-  // Determine environment (production or development)
-  const env = process.env.NODE_ENV || "development";
-  config = links[env];
-
-  console.log(`Loading database configuration for: ${env}`);
-} catch (error) {
-  console.error("Error loading links.json:", error.message);
-  console.log("Falling back to environment variables");
-
-  // Fallback to environment variables if links.json not found
-  // Railway uses MYSQL* prefix, but also support DB_* for compatibility
-  config = {
-    database: {
-      host: process.env.MYSQLHOST || process.env.DB_HOST || "localhost",
-      port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
-      user: process.env.MYSQLUSER || process.env.DB_USER || "root",
-      password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
-      database: process.env.MYSQLDATABASE || process.env.DB_NAME || "railway",
-    },
+if (sslEnabled) {
+  dbConfig.ssl = {
+    rejectUnauthorized:
+      String(process.env.DB_SSL_REJECT_UNAUTHORIZED).toLowerCase() === "true",
   };
 }
 
-// If in production and Railway MySQL variables exist, override config
-if (process.env.NODE_ENV === "production" && process.env.MYSQLHOST) {
-  console.log("Using Railway MySQL environment variables");
-  config.database = {
-    host: process.env.MYSQLHOST,
-    port: process.env.MYSQLPORT || 3306,
-    user: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQLDATABASE || "railway",
-  };
-}
+console.log(`Loading database configuration for: ${process.env.NODE_ENV || "development"}`);
 
 // Create MySQL connection pool
 const pool = mysql.createPool({
-  host: config.database.host,
-  port: config.database.port,
-  user: config.database.user,
-  password: config.database.password,
-  database: config.database.database,
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  password: dbConfig.password,
+  database: dbConfig.database,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  // Enable SSL for production (Railway proxy)
-  ...(config.database.ssl && { ssl: config.database.ssl }),
+  ...(dbConfig.ssl && { ssl: dbConfig.ssl }),
 });
 
 pool
   .getConnection()
   .then((connection) => {
     console.log("MySQL Database connected successfully!");
-    console.log(
-      `Connected to: ${config.database.host}:${config.database.port}`
-    );
-    console.log(`Database name: ${config.database.database}`);
+    console.log(`Connected to: ${dbConfig.host}:${dbConfig.port}`);
+    console.log(`Database name: ${dbConfig.database}`);
+    console.log(`SSL: ${sslEnabled ? "enabled" : "disabled"}`);
     connection.release();
   })
   .catch((error) => {
     console.error("Error connecting to MySQL Database:", error.message);
-    console.error("Connection details (host hidden for security):");
-    console.error(`- Host: ${config.database.host ? "SET" : "MISSING"}`);
-    console.error(`- User: ${config.database.user ? "SET" : "MISSING"}`);
-    console.error(
-      `- Password: ${config.database.password ? "SET" : "MISSING"}`
-    );
-    console.error(`- Database: ${config.database.database || "MISSING"}`);
+    console.error("Connection details (password hidden for security):");
+    console.error(`- Host: ${dbConfig.host ? "SET" : "MISSING"}`);
+    console.error(`- User: ${dbConfig.user ? "SET" : "MISSING"}`);
+    console.error(`- Password: ${dbConfig.password ? "SET" : "MISSING"}`);
+    console.error(`- Database: ${dbConfig.database || "MISSING"}`);
   });
 
 module.exports = pool;

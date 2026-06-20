@@ -20,6 +20,39 @@ export default function ProductDetailPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Get all unique variant images for gallery (group by color)
+  // MUST be before any conditional returns to follow Rules of Hooks
+  const variantImages = React.useMemo(() => {
+    if (!product?.variants) return [];
+    
+    const imageMap = new Map();
+    product.variants.forEach(variant => {
+      const key = variant.color || 'default';
+      if (variant.image_url && !imageMap.has(key)) {
+        imageMap.set(key, {
+          url: getImageUrl(variant.image_url),
+          color: variant.color,
+          variant_id: variant.variant_id
+        });
+      }
+    });
+    
+    return Array.from(imageMap.values());
+  }, [product?.variants]);
+
+  // Update current image when variant changes
+  useEffect(() => {
+    if (selectedVariant && variantImages.length > 0) {
+      const matchingIndex = variantImages.findIndex(
+        img => img.color === selectedVariant.color
+      );
+      if (matchingIndex !== -1) {
+        setCurrentImageIndex(matchingIndex);
+      }
+    }
+  }, [selectedVariant, variantImages]);
 
   // Check if user is staff
   useEffect(() => {
@@ -180,40 +213,7 @@ export default function ProductDetailPage() {
   // Get the image URL for the selected variant
   const imageUrl = getImageUrl(selectedVariant?.image_url);
 
-  // Get all unique variant images for gallery (group by color)
-  const variantImages = React.useMemo(() => {
-    if (!product?.variants) return [];
-    
-    const imageMap = new Map();
-    product.variants.forEach(variant => {
-      const key = variant.color || 'default';
-      if (variant.image_url && !imageMap.has(key)) {
-        imageMap.set(key, {
-          url: getImageUrl(variant.image_url),
-          color: variant.color,
-          variant_id: variant.variant_id
-        });
-      }
-    });
-    
-    return Array.from(imageMap.values());
-  }, [product?.variants]);
-
-  // State for selected image (for gallery)
-  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
-
-  // Update current image when variant changes
-  React.useEffect(() => {
-    if (selectedVariant && variantImages.length > 0) {
-      const matchingIndex = variantImages.findIndex(
-        img => img.color === selectedVariant.color
-      );
-      if (matchingIndex !== -1) {
-        setCurrentImageIndex(matchingIndex);
-      }
-    }
-  }, [selectedVariant, variantImages]);
-
+  // Use image gallery if available, otherwise use variant image
   const currentDisplayImage = variantImages.length > 0 
     ? variantImages[currentImageIndex].url 
     : imageUrl;

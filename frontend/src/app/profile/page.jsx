@@ -2,9 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
+import { API_BASE_URL } from "@/config/api";
 
 export default function ProfileDetailsPage() {
   const router = useRouter();

@@ -1,57 +1,66 @@
-# BrightBuy SQL Queries
+# BrightBuy Database
 
-This folder contains all SQL queries organized by category for the BrightBuy database.
+This folder holds the full database definition and seed data. Files are
+numbered by run order.
 
-## Directory Structure
+## Run order
 
-### 01_schema/
+Use the master runner from the `queries/` directory:
 
-Database schema definitions
+```bash
+cd queries
+mysql -h <host> -P <port> -u <user> -p < 00_run_all.sql
+```
 
-- `01_main_schema.sql` - Main database schema with all tables
+`00_run_all.sql` sources the files in this order:
 
-### 02_data/
+1. `01_schema/01_main_schema.sql` — creates the `brightbuy` database, all
+   tables, triggers, stored procedures, and views.
+2. `05_maintenance/03_recreate_users_table.sql` — the `users` login table
+   (depends on `Customer` and `Staff`).
+3. `02_data/*` — seed categories, products, variants, and product images.
+4. `03_procedures/01_cart_procedures.sql` — cart stored procedures.
+5. `05_maintenance/01_fix_cart_schema.sql`, `02_allow_backorders.sql` — migrations.
+6. `04_admin_setup/*` — creates the admin/staff accounts and links them to `users`.
 
-Data population scripts
+## Hosting on a managed MySQL (e.g. Aiven free plan)
 
-- `01_initial_population.sql` - Initial data population
-- `02_additional_population.sql` - Additional data records
-- `03_product_images.sql` - Product images data
+Managed hosts often (a) give you a fixed default database such as
+`defaultdb` and (b) do **not** allow `CREATE DATABASE` / `DROP DATABASE`.
 
-### 03_procedures/
+To load the schema there:
 
-Stored procedures and functions
+1. Open `01_schema/01_main_schema.sql` and **remove the first three lines**:
+   ```sql
+   DROP DATABASE IF EXISTS brightbuy;
+   CREATE DATABASE brightbuy;
+   USE brightbuy;
+   ```
+2. Connect directly to the provided database, e.g.:
+   ```bash
+   mysql -h <aiven-host> -P <aiven-port> -u avnadmin -p \
+         --ssl-mode=REQUIRED defaultdb < 00_run_all.sql
+   ```
+   (Aiven requires SSL — use `--ssl-mode=REQUIRED`, and download the CA cert
+   from the Aiven console for stricter verification.)
+3. The other files contain `USE brightbuy;` — either replace those with your
+   default database name, or create a `brightbuy` schema if your plan allows
+   it and grant your user access.
 
-- `01_cart_procedures.sql` - Cart-related stored procedures
+Set the backend env vars to match (see `backend/.env.example`):
 
-### 04_admin_setup/
+```
+DB_HOST=<aiven-host>
+DB_PORT=<aiven-port>
+DB_USER=avnadmin
+DB_PASSWORD=<aiven-password>
+DB_NAME=defaultdb        # or brightbuy if you created it
+DB_SSL=true
+```
 
-Admin and staff account setup
+## Default accounts (seed data)
 
-- `01_create_admin.sql` - Create admin accounts
-- `02_create_staff.sql` - Create staff accounts
-- `03_link_admin_users.sql` - Link admin to users table
+- Staff (Level01): `admin_jvishula@brightbuy.com` / `123456`
+- Staff: `admin@brightbuy.com` / `123456`
 
-### 05_maintenance/
-
-Maintenance and fix scripts
-
-- `01_fix_cart_schema.sql` - Cart schema fixes
-- `02_allow_backorders.sql` - Backorder configuration
-- `03_recreate_users_table.sql` - Users table recreation
-
-## Usage Order
-
-For a fresh database setup, run queries in this order:
-
-1. Schema files (01_schema/)
-2. Data population files (02_data/)
-3. Procedures (03_procedures/)
-4. Admin setup (04_admin_setup/)
-5. Maintenance scripts as needed (05_maintenance/)
-
-## Notes
-
-- Always backup your database before running maintenance scripts
-- Check database backups in `/database_backups/` folder
-- Ensure your MySQL user has appropriate privileges for all operations
+**Change these passwords immediately after first login in any real deployment.**

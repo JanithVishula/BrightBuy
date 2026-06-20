@@ -1,0 +1,42 @@
+# ===================================================================
+# Root .gitignore — applies to the whole monorepo
+# ===================================================================
+
+# Dependencies
+node_modules/
+
+# Environment variables & secrets (NEVER commit real values)
+.env
+.env.*
+!.env.example
+*.env
+!*.env.example
+
+# Real config with credentials (commit only *.example.json)
+config/links.json
+**/config/links.json
+
+# Hosting / deploy artifacts
+.netlify/
+.vercel/
+
+# Uploaded images (runtime user uploads, not source)
+backend/public/images/products/*
+!backend/public/images/products/.gitkeep
+
+# Database dumps / backups
+*.sql.bak
+database_backups/*.sql
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor / OS
+.vscode/
+.DS_Store
+*.pem

@@ -1,11 +1,8 @@
 // components/ImageUpload.jsx
 import React, { useState, useRef } from "react";
+import { API_BASE_URL, API_SERVER_URL } from "../config/api";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-  "https://gallant-friendship-production.up.railway.app";
+const BACKEND_URL = API_SERVER_URL;
 
 const ImageUpload = ({ onImageUploaded, currentImage = null }) => {
   const [selectedFile, setSelectedFile] = useState(null);

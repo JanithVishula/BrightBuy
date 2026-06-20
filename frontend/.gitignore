@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Real config with credentials (commit only the *.example.json)
+config/links.json
+
 # vercel
 .vercel
 

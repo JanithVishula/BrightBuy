@@ -2,9 +2,7 @@
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
+import { API_BASE_URL } from "@/config/api";
 
 export default function SettingsPage() {
   const { user, loading, logout } = useAuth();

@@ -1,7 +1,5 @@
 // API service for frontend
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://gallant-friendship-production-4092.up.railway.app/api";
+import { API_BASE_URL } from "../config/api";
 
 // Products API
 export const productsAPI = {

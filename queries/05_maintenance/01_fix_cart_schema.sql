@@ -1,8 +1,4 @@
--- ========================================
--- FIX CART SCHEMA - Remove Cart table, use customer_id approach
--- ========================================
--- This script fixes the Cart_item table to use customer_id directly
--- instead of referencing a separate Cart table
+
 USE brightbuy;
 -- Step 1: Drop the old Cart_item table (this will remove all cart data)
 DROP TABLE IF EXISTS Cart_item;

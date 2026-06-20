@@ -1,2 +1,0 @@
-# BrightBuy
-Database Module Project

@@ -1,4 +1,6 @@
 // utils/imageUrl.js
+import { API_SERVER_URL } from "../config/api";
+
 /**
  * Get the full image URL
  * @param {string} imageUrl - The image URL from the database
@@ -12,9 +14,6 @@ export const getImageUrl = (imageUrl) => {
     return imageUrl;
   }
 
-  // Otherwise, prepend backend URL (local uploaded images)
-  const API_SERVER_URL =
-    process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-    "https://gallant-friendship-production.up.railway.app";
+  // Otherwise, prepend the backend server origin (local uploaded images)
   return `${API_SERVER_URL}${imageUrl}`;
 };

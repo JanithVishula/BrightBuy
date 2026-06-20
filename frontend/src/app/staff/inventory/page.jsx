@@ -2,12 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getImageUrl } from "@/utils/imageUrl";
+import { API_BASE_URL, API_SERVER_URL } from "@/config/api";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ||
-  "https://gallant-friendship-production.up.railway.app";
+const BACKEND_URL = API_SERVER_URL;
 
 export default function InventoryManagement() {
   const router = useRouter();

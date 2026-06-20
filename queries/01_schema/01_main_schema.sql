@@ -1,16 +1,8 @@
--- ============================
--- BrightBuy Database Schema - Customer ID Approach
--- Modified to use customer_id directly in Cart_item (no separate Cart table)
--- Date: October 20, 2025
--- ============================
-
 DROP DATABASE IF EXISTS brightbuy;
 CREATE DATABASE brightbuy;
 USE brightbuy;
 
--- ============================
--- 1. Category
--- ============================
+
 CREATE TABLE Category (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -18,9 +10,7 @@ CREATE TABLE Category (
     CONSTRAINT fk_category_parent FOREIGN KEY (parent_id) REFERENCES Category(category_id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
--- ============================
--- 2. Product
--- ============================
+
 CREATE TABLE Product (
     product_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -29,9 +19,7 @@ CREATE TABLE Product (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- ============================
--- 3. ProductCategory
--- ============================
+
 CREATE TABLE ProductCategory (
     product_id INT NOT NULL,
     category_id INT NOT NULL,
@@ -40,9 +28,7 @@ CREATE TABLE ProductCategory (
     CONSTRAINT fk_pc_category FOREIGN KEY (category_id) REFERENCES Category(category_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
--- ============================
--- 4. ProductVariant
--- ============================
+
 CREATE TABLE ProductVariant (
     variant_id INT AUTO_INCREMENT PRIMARY KEY,
     product_id INT NOT NULL,
@@ -72,9 +58,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- ============================
--- 5. Customer
--- ============================
 CREATE TABLE Customer (
     customer_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
@@ -86,9 +69,6 @@ CREATE TABLE Customer (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ============================
--- 6. Address
--- ============================
 CREATE TABLE Address (
     address_id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT NOT NULL,
@@ -101,9 +81,6 @@ CREATE TABLE Address (
     CONSTRAINT fk_address_customer FOREIGN KEY (customer_id) REFERENCES Customer(customer_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
--- ============================
--- 7. Shipment
--- ============================
 CREATE TABLE Shipment (
     shipment_id INT AUTO_INCREMENT PRIMARY KEY,
     shipment_provider VARCHAR(100),
@@ -113,9 +90,6 @@ CREATE TABLE Shipment (
     notes VARCHAR(255)
 );
 
--- ============================
--- 8. ZipDeliveryZone
--- ============================
 CREATE TABLE ZipDeliveryZone (
     zip_code VARCHAR(10) PRIMARY KEY,
     state CHAR(2) NOT NULL,
@@ -136,9 +110,7 @@ VALUES
     ('77001', 'TX', 1, 1, 7.00, 5, NULL, 'Houston'),
     ('78201', 'TX', 1, 1, 6.00, 5, NULL, 'San Antonio');
 
--- ============================
--- 9. Orders
--- ============================
+
 CREATE TABLE Orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     address_id INT NULL,
@@ -195,9 +167,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- ============================
--- 10. Order_item
--- ============================
 CREATE TABLE Order_item (
     order_item_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -210,9 +179,6 @@ CREATE TABLE Order_item (
 );
 CREATE INDEX idx_orderitem_variant ON Order_item(variant_id);
 
--- ============================
--- 11. Inventory
--- ============================
 CREATE TABLE Inventory (
     variant_id INT PRIMARY KEY,
     quantity INT NOT NULL,
@@ -230,9 +196,7 @@ BEGIN
 END//
 DELIMITER ;
 
--- ============================
--- 12. Cart_item (CUSTOMER_ID APPROACH - NO CART TABLE)
--- ============================
+
 CREATE TABLE Cart_item (
     cart_item_id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT NOT NULL,
@@ -247,9 +211,7 @@ CREATE TABLE Cart_item (
 );
 CREATE INDEX idx_cartitem_customer ON Cart_item(customer_id);
 
--- ============================
--- 13. Staff
--- ============================
+
 CREATE TABLE Staff (
     staff_id INT AUTO_INCREMENT PRIMARY KEY,
     user_name VARCHAR(100) UNIQUE NOT NULL,
@@ -260,9 +222,7 @@ CREATE TABLE Staff (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ============================
--- 14. Inventory_updates
--- ============================
+
 CREATE TABLE Inventory_updates (
     update_id INT AUTO_INCREMENT PRIMARY KEY,
     staff_id INT NOT NULL,
@@ -301,9 +261,7 @@ BEGIN
 END//
 DELIMITER ;
 
--- ============================
--- 15. Payment
--- ============================
+
 CREATE TABLE Payment (
     payment_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NULL,
@@ -339,9 +297,7 @@ BEGIN
 END//
 DELIMITER ;
 
--- ============================
--- 16. Reporting Procedures & Views
--- ============================
+
 DELIMITER //
 CREATE PROCEDURE GetTopSellingProducts(
     IN start_date DATE,
@@ -421,13 +377,8 @@ FROM Orders o
     JOIN Order_item oi ON o.order_id = oi.order_id
 GROUP BY YEAR(o.created_at), QUARTER(o.created_at);
 
--- ============================
--- Additional Indexes
--- ============================
+
 CREATE INDEX idx_productcategory_category ON ProductCategory(category_id);
 
--- ============================
--- Summary
--- ============================
 SELECT 'BrightBuy Database Schema (Customer ID Approach) created successfully!' AS Status;
 SELECT 'Next: Run recreate_users_table.sql, then cart_procedures_customer.sql' AS Next_Step;

@@ -1,0 +1,36 @@
+{
+  "_comment": "REFERENCE ONLY. The app no longer reads this file — all config comes from environment variables (see .env.example). This file documents the shape of config for local notes. Never put real credentials here, and never commit a real links.json.",
+  "development": {
+    "database": {
+      "host": "localhost",
+      "port": 3306,
+      "user": "root",
+      "password": "<your_local_mysql_password>",
+      "database": "brightbuy"
+    },
+    "server": {
+      "port": 5001,
+      "corsOrigin": ["http://localhost:3000", "http://localhost:3001"]
+    },
+    "jwt": {
+      "secret": "<set_via_JWT_SECRET_env_var>"
+    }
+  },
+  "production": {
+    "database": {
+      "host": "<db_host>",
+      "port": 3306,
+      "user": "<db_user>",
+      "password": "<set_via_DB_PASSWORD_env_var>",
+      "database": "<db_name>",
+      "ssl": { "rejectUnauthorized": false }
+    },
+    "server": {
+      "port": 8080,
+      "corsOrigin": ["<your_frontend_url>"]
+    },
+    "jwt": {
+      "secret": "<set_via_JWT_SECRET_env_var>"
+    }
+  }
+}

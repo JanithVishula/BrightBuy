@@ -3,65 +3,47 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const path = require("path");
-const fs = require("fs");
 
 // Load environment variables FIRST before requiring db
 dotenv.config();
+
+// Fail fast if the JWT secret is missing — never run with a default secret.
+if (!process.env.JWT_SECRET) {
+  console.error(
+    "FATAL: JWT_SECRET environment variable is required and was not set."
+  );
+  process.exit(1);
+}
 
 const db = require("./config/db"); // initializes the DB connection
 
 const app = express();
 
-// Load configuration from links.json
-let config;
-try {
-  const linksPath = path.join(__dirname, "config", "links.json");
-  const linksData = fs.readFileSync(linksPath, "utf8");
-  const links = JSON.parse(linksData);
+const env = process.env.NODE_ENV || "development";
 
-  const env = process.env.NODE_ENV || "development";
-  config = links[env];
-  console.log(`Loaded server configuration for: ${env}`);
-} catch (error) {
-  console.error("Error loading links.json for server config:", error.message);
-  // Fallback to default config
-  config = {
-    server: {
-      port: process.env.PORT || 5001,
-      corsOrigin: ["http://localhost:3000", "http://localhost:3001"],
-    },
-    jwt: {
-      secret: process.env.JWT_SECRET || "default_secret",
-    },
-  };
-}
+// Server configuration — entirely from environment variables.
+const config = {
+  server: {
+    port: Number(process.env.PORT) || 5001,
+  },
+  database: {
+    host: process.env.DB_HOST || process.env.MYSQLHOST || "localhost",
+  },
+};
+console.log(`Loaded server configuration for: ${env}`);
 
 // Middleware
-// Configure CORS to allow requests from specific origins
-// For Railway deployment, use CORS_ORIGIN environment variable if available
-let allowedOrigins = config.server.corsOrigin;
-
-// Override with environment variable if set (Railway deployment)
+// CORS allowed origins come ONLY from the CORS_ORIGIN env var
+// (comma-separated). In development we default to common localhost ports.
+let allowedOrigins;
 if (process.env.CORS_ORIGIN) {
   allowedOrigins = process.env.CORS_ORIGIN.split(",").map((origin) =>
     origin.trim()
   );
-  console.log("Using CORS_ORIGIN from environment:", allowedOrigins);
 } else {
-  // For Railway production, always include the production frontend URL
-  if (process.env.NODE_ENV === "production") {
-    allowedOrigins = [
-      ...allowedOrigins,
-      "https://brightbuy-production.up.railway.app",
-    ];
-    console.log(
-      "Using production CORS origins (hardcoded + config):",
-      allowedOrigins
-    );
-  } else {
-    console.log("Using CORS origins from config:", allowedOrigins);
-  }
+  allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
 }
+console.log("CORS allowed origins:", allowedOrigins);
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -124,7 +106,4 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`Local access: http://localhost:${PORT}`);
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`LAN access: http://192.168.8.129:${PORT}`);
-  }
 });

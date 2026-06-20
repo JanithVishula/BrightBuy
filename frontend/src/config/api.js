@@ -1,24 +1,13 @@
-// Centralized API configuration using links.json
-import linksConfig from '../../../config/links.json';
+// Single source of truth for the backend API base URL.
+// Configured ONLY via the NEXT_PUBLIC_API_URL environment variable.
+//   - Local dev:  NEXT_PUBLIC_API_URL=http://localhost:5001/api  (frontend/.env.local)
+//   - Production: set in your host's dashboard (e.g. Vercel) to
+//                 https://<your-backend>.onrender.com/api
+//
+// Falls back to localhost so `npm run dev` works without extra setup.
 
-// Determine environment based on hostname or NODE_ENV
-const getEnvironment = () => {
-  if (typeof window !== 'undefined') {
-    // Client-side: check hostname
-    const hostname = window.location.hostname;
-    if (hostname.includes('railway.app') || hostname.includes('netlify.app')) {
-      return 'production';
-    }
-  }
-  // Server-side or localhost: use NODE_ENV
-  return process.env.NODE_ENV === 'production' ? 'production' : 'development';
-};
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
-const env = getEnvironment();
-const config = linksConfig[env];
-
-console.log(`API Config loaded for environment: ${env}`);
-console.log(`API Base URL: ${config.apiUrl}`);
-
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || config.apiUrl;
-export const API_SERVER_URL = process.env.NEXT_PUBLIC_API_SERVER_URL || config.backendUrl;
+// Server origin without the trailing /api — used for building image/static URLs.
+export const API_SERVER_URL = API_BASE_URL.replace(/\/api\/?$/, "");

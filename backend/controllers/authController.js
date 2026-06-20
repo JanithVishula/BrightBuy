@@ -78,7 +78,7 @@ exports.login = async (req, res) => {
         staffId: user.staff_id || null,
         staffLevel: user.staff_level || null,
       },
-      process.env.JWT_SECRET || "your-secret-key-change-in-production",
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -262,7 +262,7 @@ exports.register = async (req, res) => {
           email: email,
           role: "customer",
         },
-        process.env.JWT_SECRET || "your-secret-key-change-in-production",
+        process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
       console.log("✓ JWT token generated");

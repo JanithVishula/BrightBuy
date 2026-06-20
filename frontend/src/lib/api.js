@@ -1,5 +1,4 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
+import { API_BASE_URL } from "../config/api";
 
 export async function getInventoryData() {
   try {

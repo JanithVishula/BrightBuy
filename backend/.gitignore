@@ -14,13 +14,19 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-# Environment Variables
+# Environment Variables & secrets (never commit real values)
 .env
-.env.local
-.env.test
-# Ignore any other environment files but keep examples
-*.env
+.env.*
 !.env.example
+*.env
+!*.env.example
+
+# Real config with credentials (commit only the *.example.json)
+config/links.json
+
+# Uploaded images (runtime user uploads, not source)
+public/images/products/*
+!public/images/products/.gitkeep
 
 # Editor & IDE Directories
 .vscode/

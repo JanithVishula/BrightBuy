@@ -4,9 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "../login/Auth.module.css";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://gallant-friendship-production.up.railway.app/api";
+import { API_BASE_URL } from "@/config/api";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
