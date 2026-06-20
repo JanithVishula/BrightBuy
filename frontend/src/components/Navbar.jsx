@@ -16,27 +16,22 @@ const Navbar = () => {
     <header className="bg-gradient-to-r from-card via-card to-background shadow-lg sticky top-0 z-50 border-b-2 border-primary/20 backdrop-blur-sm">
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center gap-6">
-          {/* Left Section: Logo & User Info */}
-          <div className="flex items-center space-x-6">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="bg-white p-2 rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110 overflow-hidden">
-                <Image
-                  src="/logo.png"
-                  alt="BrightBuy Logo"
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                  priority
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-3xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  BrightBuy
-                </span>
-                <span className="text-xs text-text-secondary font-medium -mt-1">
-                  Your Tech Paradise
-                </span>
-              </div>
+          {/* Left Section: Logo (pulled hard-left) + User Info */}
+          <div className="flex items-center gap-5">
+            <Link href="/" className="flex items-center gap-3 group shrink-0">
+              <Image
+                src="/brightbuy-logo.png"
+                alt="BrightBuy"
+                width={170}
+                height={48}
+                className="h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
+              <span className="hidden sm:block text-xs text-text-secondary font-medium border-l border-card-border pl-3">
+                Your Tech
+                <br />
+                Paradise
+              </span>
             </Link>
 
             {user && (

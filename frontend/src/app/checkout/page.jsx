@@ -299,6 +299,9 @@ function CheckoutPageContent() {
     try {
       const customerId = localStorage.getItem("customer_id");
 
+      // Declared here so it is in scope when building orderData below.
+      let addressResult = null;
+
       // Step 1: Update customer basic info (phone)
       if (customerId) {
         await customerAPI.updateInfo(customerId, {
@@ -308,7 +311,6 @@ function CheckoutPageContent() {
         });
 
         // Step 2: Save address (only for Standard Delivery)
-        let addressResult = null;
         if (deliveryMode === "Standard Delivery") {
           const addressData = {
             address_id: savedAddressId, // Will be null for new address

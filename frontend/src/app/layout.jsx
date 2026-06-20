@@ -1,8 +1,7 @@
 // src/app/layout.jsx
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import ChromeShell from "@/components/ChromeShell";
 import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -34,11 +33,7 @@ export default function RootLayout({ children }) {
         <ThemeProvider>
           <AuthProvider>
             <CartProvider>
-              <div className="flex flex-col min-h-screen">
-                <Navbar />
-                <main className="flex-grow">{children}</main>
-                <Footer />
-              </div>
+              <ChromeShell>{children}</ChromeShell>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>
