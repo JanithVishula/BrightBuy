@@ -37,6 +37,21 @@ exports.authenticate = (req, res, next) => {
   }
 };
 
+// Optional auth: attaches req.user if a valid token is present, but does not
+// reject the request when it's missing/invalid. Used for endpoints that work
+// for both guests and logged-in users (e.g. submitting a support ticket).
+exports.optionalAuthenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      req.user = jwt.verify(authHeader.substring(7), process.env.JWT_SECRET);
+    } catch (_) {
+      // Ignore an invalid/expired token and continue as a guest.
+    }
+  }
+  next();
+};
+
 // Middleware to check user role
 exports.authorize = (...roles) => {
   return (req, res, next) => {

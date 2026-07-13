@@ -76,22 +76,14 @@ const getProductNames = async (req, res) => {
 
 // @desc    Upload product image
 // @route   POST /api/products/upload-image
-const { isConfigured, uploadBuffer } = require("../config/cloudinary");
-
 const uploadProductImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    let imageUrl;
-    if (isConfigured) {
-      // Stream the in-memory buffer to Cloudinary; store the absolute CDN URL.
-      imageUrl = await uploadBuffer(req.file.buffer);
-    } else {
-      // Local-disk fallback (dev only; ephemeral on cloud hosts).
-      imageUrl = `/images/products/${req.file.filename}`;
-    }
+    // Images are stored on local disk and served from /images/products.
+    const imageUrl = `/images/products/${req.file.filename}`;
 
     res.json({
       message: "Image uploaded successfully",

@@ -130,10 +130,14 @@ const SearchBar = () => {
           onFocus={() => searchTerm.trim() && setShowSuggestions(true)}
           placeholder="Search for products..."
           className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800 text-text-primary"
+          // Some form-filler browser extensions inject an `fdprocessedid`
+          // attribute before hydration, causing a false hydration mismatch.
+          suppressHydrationWarning
         />
         <button
           type="submit"
           className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary"
+          suppressHydrationWarning
         >
           <i className="fas fa-search"></i>
         </button>

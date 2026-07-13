@@ -16,10 +16,6 @@ node_modules/
 config/links.json
 **/config/links.json
 
-# Hosting / deploy artifacts
-.netlify/
-.vercel/
-
 # Uploaded images (runtime user uploads, not source)
 backend/public/images/products/*
 !backend/public/images/products/.gitkeep

@@ -2,9 +2,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/config/api";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function StaffReports() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const [exporting, setExporting] = useState(null); // report type currently exporting
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeReport, setActiveReport] = useState("sales-summary");
@@ -272,6 +275,8 @@ export default function StaffReports() {
         break;
     }
 
+    setExporting(reportType);
+    showToast("Generating your report...", "info", 2000);
     try {
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -282,21 +287,30 @@ export default function StaffReports() {
         const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = downloadUrl;
-        a.download =
+        const filename =
           response.headers
             .get("Content-Disposition")
             ?.split("filename=")[1]
             ?.replace(/"/g, "") || "report.xlsx";
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(downloadUrl);
+        showToast(`Report downloaded: ${filename}`, "success");
       } else {
-        alert("Failed to export report");
+        let msg = "Failed to export report.";
+        try {
+          const err = await response.json();
+          if (err.message) msg = err.message;
+        } catch (_) {}
+        showToast(msg, "error");
       }
     } catch (error) {
       console.error("Export error:", error);
-      alert("Failed to export report");
+      showToast("Failed to export report. Please try again.", "error");
+    } finally {
+      setExporting(null);
     }
   };
 

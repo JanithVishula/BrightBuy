@@ -209,6 +209,11 @@ export const cartAPI = {
     const response = await fetch(`${API_BASE_URL}/cart/${customerId}`, {
       headers: authHeaders(),
     });
+    // 401/403 just means the session isn't valid — treat as an empty cart
+    // rather than a hard error, so a stale customer_id doesn't blow up.
+    if (response.status === 401 || response.status === 403) {
+      return { items: [] };
+    }
     if (!response.ok) throw new Error("Failed to fetch cart details");
     return response.json();
   },
@@ -400,6 +405,85 @@ export const ordersAPI = {
       body: JSON.stringify({ status }),
     });
     if (!response.ok) throw new Error("Failed to update order status");
+    return response.json();
+  },
+};
+
+// Support / tickets API
+export const supportAPI = {
+  // Create a ticket. Works for guests and logged-in customers (token optional).
+  createTicket: async (data) => {
+    const response = await fetch(`${API_BASE_URL}/support/tickets`, {
+      method: "POST",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(data),
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(json.message || "Failed to submit support request");
+    }
+    return json;
+  },
+
+  // Customer: list my own tickets
+  getMyTickets: async () => {
+    const response = await fetch(`${API_BASE_URL}/support/my-tickets`, {
+      headers: authHeaders(),
+    });
+    if (!response.ok) throw new Error("Failed to fetch your tickets");
+    return response.json();
+  },
+
+  // Staff: list all tickets (optional status filter)
+  getAllTickets: async (status) => {
+    const qs = status && status !== "all" ? `?status=${status}` : "";
+    const response = await fetch(`${API_BASE_URL}/support/tickets${qs}`, {
+      headers: authHeaders(),
+    });
+    if (!response.ok) throw new Error("Failed to fetch tickets");
+    return response.json();
+  },
+
+  // Staff: ticket counts by status
+  getStats: async () => {
+    const response = await fetch(`${API_BASE_URL}/support/stats`, {
+      headers: authHeaders(),
+    });
+    if (!response.ok) throw new Error("Failed to fetch support stats");
+    return response.json();
+  },
+
+  // Owner or staff: one ticket with its message thread
+  getTicket: async (ticketId) => {
+    const response = await fetch(`${API_BASE_URL}/support/tickets/${ticketId}`, {
+      headers: authHeaders(),
+    });
+    if (!response.ok) throw new Error("Failed to fetch ticket");
+    return response.json();
+  },
+
+  // Owner or staff: post a reply
+  addMessage: async (ticketId, body) => {
+    const response = await fetch(
+      `${API_BASE_URL}/support/tickets/${ticketId}/messages`,
+      {
+        method: "POST",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ body }),
+      }
+    );
+    if (!response.ok) throw new Error("Failed to send reply");
+    return response.json();
+  },
+
+  // Staff: update status / priority
+  updateTicket: async (ticketId, data) => {
+    const response = await fetch(`${API_BASE_URL}/support/tickets/${ticketId}`, {
+      method: "PATCH",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to update ticket");
     return response.json();
   },
 };

@@ -15,22 +15,5 @@
     "jwt": {
       "secret": "<set_via_JWT_SECRET_env_var>"
     }
-  },
-  "production": {
-    "database": {
-      "host": "<db_host>",
-      "port": 3306,
-      "user": "<db_user>",
-      "password": "<set_via_DB_PASSWORD_env_var>",
-      "database": "<db_name>",
-      "ssl": { "rejectUnauthorized": false }
-    },
-    "server": {
-      "port": 8080,
-      "corsOrigin": ["<your_frontend_url>"]
-    },
-    "jwt": {
-      "secret": "<set_via_JWT_SECRET_env_var>"
-    }
   }
 }

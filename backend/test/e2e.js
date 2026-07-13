@@ -7,11 +7,13 @@
  * and security boundaries hold.
  *
  * Usage:
- *   API_URL=https://<backend>/api \
+ *   node backend/test/e2e.js
+ *   # or override the defaults:
+ *   API_URL=http://localhost:5001/api \
  *   ADMIN_EMAIL=admin@brightbuy.com ADMIN_PASSWORD=BrightBuy@2026 \
  *   node backend/test/e2e.js
  *
- * Defaults target the live Railway backend and the seed admin account.
+ * Defaults target the local backend and the seed admin account.
  */
 
 const API = process.env.API_URL || "http://localhost:5001/api";

@@ -2,6 +2,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const compression = require("compression");
 const path = require("path");
 
 // Load environment variables FIRST before requiring db
@@ -27,7 +28,7 @@ const config = {
     port: Number(process.env.PORT) || 5001,
   },
   database: {
-    host: process.env.DB_HOST || process.env.MYSQLHOST || "localhost",
+    host: process.env.DB_HOST || "localhost",
   },
 };
 console.log(`Loaded server configuration for: ${env}`);
@@ -41,7 +42,12 @@ if (process.env.CORS_ORIGIN) {
     origin.trim()
   );
 } else {
-  allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
+  allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+  ];
 }
 console.log("CORS allowed origins:", allowedOrigins);
 
@@ -63,6 +69,7 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
+app.use(compression()); // gzip all responses
 app.use(cors(corsOptions));
 app.use(express.json()); // To accept JSON data in the body
 
@@ -83,6 +90,7 @@ app.use("/api/staff", require("./routes/staff"));
 app.use("/api/customers", require("./routes/customer"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/reports", require("./routes/reports"));
+app.use("/api/support", require("./routes/support"));
 
 // Basic Test Route
 app.get("/", (req, res) => {
@@ -99,9 +107,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Lightweight keep-alive ping (no DB work) — point an external uptime
-// monitor (e.g. cron-job.org, UptimeRobot) at this every ~5 min to reduce
-// cold starts on hosts that sleep idle services.
+// Lightweight liveness ping (no DB work).
 app.get("/api/ping", (req, res) => {
   res.status(200).send("pong");
 });

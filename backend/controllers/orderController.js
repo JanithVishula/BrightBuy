@@ -265,6 +265,7 @@ const getOrderById = async (req, res) => {
               pv.sku,
               pv.color,
               pv.size,
+              pv.image_url,
               p.name as product_name,
               p.brand
        FROM Order_item oi

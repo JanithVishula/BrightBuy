@@ -17,14 +17,13 @@
 --   4. Stored procedures
 --   5. Maintenance migrations (cart schema fix, backorders)
 --   6. Admin / staff accounts (depend on Staff + users tables)
---
--- NOTE for managed hosts (e.g. Aiven free plan) that DO NOT allow
--- CREATE DATABASE: see queries/README.md — you run the same files but
--- skip the DROP/CREATE DATABASE lines and target the host's default db.
 -- ===================================================================
 
 -- 1. Core schema (this file creates and USEs the `brightbuy` database)
 SOURCE 01_schema/01_main_schema.sql;
+
+-- 1b. Customer support: tickets + messages
+SOURCE 01_schema/02_support_schema.sql;
 
 -- 2. users login table (links Customer <-> Staff <-> login)
 SOURCE 05_maintenance/03_recreate_users_table.sql;

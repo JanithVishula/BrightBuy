@@ -1,12 +1,10 @@
 // src/app/layout.jsx
-import { Inter } from "next/font/google";
 import "./globals.css";
 import ChromeShell from "@/components/ChromeShell";
 import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-
-const inter = Inter({ subsets: ["latin"] });
+import { ToastProvider } from "@/contexts/ToastContext";
 
 export const metadata = {
   title: "BrightBuy - Electronics & More",
@@ -29,11 +27,13 @@ export default function RootLayout({ children }) {
           referrerPolicy="no-referrer"
         />
       </head>
-      <body className={`${inter.className} bg-background`}>
+      <body className="bg-background">
         <ThemeProvider>
           <AuthProvider>
             <CartProvider>
-              <ChromeShell>{children}</ChromeShell>
+              <ToastProvider>
+                <ChromeShell>{children}</ChromeShell>
+              </ToastProvider>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

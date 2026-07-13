@@ -104,16 +104,13 @@ function ProductsPageContent() {
       try {
         setLoading(true);
 
-        // If search query exists, use search API
-        let productsData;
-        if (searchQuery) {
-          productsData = await productsAPI.searchProducts(searchQuery);
-        } else {
-          productsData = await productsAPI.getAllProducts();
-        }
-
-        // Fetch categories
-        const categoriesData = await categoriesAPI.getAllCategories();
+        // Fetch products and categories in parallel (they're independent).
+        const [productsData, categoriesData] = await Promise.all([
+          searchQuery
+            ? productsAPI.searchProducts(searchQuery)
+            : productsAPI.getAllProducts(),
+          categoriesAPI.getAllCategories(),
+        ]);
 
         setProducts(productsData);
 

@@ -26,15 +26,23 @@ export const CartProvider = ({ children }) => {
   // Initialize customer from localStorage on mount and when user changes
   useEffect(() => {
     const storedCustomerId = localStorage.getItem("customer_id");
-    
+
+    // A cart fetch is only valid when we still hold an auth token. A leftover
+    // customer_id without a token (e.g. an expired session) would 401.
+    const hasToken = Boolean(
+      localStorage.getItem("bb_token") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken")
+    );
+
     // Prefer customer_id from authenticated user object
     const effectiveCustomerId = user?.customer_id || storedCustomerId;
 
-    if (effectiveCustomerId && effectiveCustomerId !== customerId) {
+    if (effectiveCustomerId && hasToken && effectiveCustomerId !== customerId) {
       setCustomerId(effectiveCustomerId);
       loadCart(effectiveCustomerId);
-    } else if (!effectiveCustomerId && customerId) {
-      // User logged out
+    } else if ((!effectiveCustomerId || !hasToken) && customerId) {
+      // User logged out or session expired
       setCustomerId(null);
       setCartItems([]);
     }

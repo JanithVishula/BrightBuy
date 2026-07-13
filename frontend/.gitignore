@@ -36,9 +36,6 @@ yarn-error.log*
 # Real config with credentials (commit only the *.example.json)
 config/links.json
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts

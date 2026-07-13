@@ -9,6 +9,7 @@ import { variantsAPI, customerAPI, ordersAPI } from "@/services/api";
 import { formatCurrency } from "@/utils/currency";
 import BackButton from "@/components/BackButton";
 import { getImageUrl } from "@/utils/imageUrl";
+import { useToast } from "@/contexts/ToastContext";
 
 function CheckoutPageContent() {
   const { cartItems, cartSubtotal, cartCount, clearCart, removeFromCart } =
@@ -16,6 +17,7 @@ function CheckoutPageContent() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
 
   // Check if this is a "Buy Now" checkout
   const isBuyNow = searchParams.get("buyNow") === "true";
@@ -368,20 +370,10 @@ function CheckoutPageContent() {
       // Create the order
       const orderResult = await ordersAPI.createOrder(orderData, token);
 
-      // Success message
-      const deliveryMessage =
-        deliveryMode === "Store Pickup"
-          ? "\n\nPlease collect your order from our store. We'll notify you when it's ready for pickup."
-          : "\n\nYour shipping information has been saved for future orders.";
-
-      alert(
-        `Order placed successfully!\n\nOrder ID: ${
-          orderResult.order.order_id
-        }\nDelivery: ${deliveryMode}\nTotal: ${formatCurrency(
-          totalAmount
-        )}\nPayment: ${
-          paymentMethod === "card" ? "Card Payment" : "Cash on Delivery"
-        }${deliveryMessage}`
+      // Nice confirmation toast (the full success page follows on redirect)
+      showToast(
+        `Order #${orderResult.order.order_id} placed successfully! Payment confirmed.`,
+        "success"
       );
 
       // Remove items from cart based on checkout type
@@ -401,11 +393,11 @@ function CheckoutPageContent() {
         }
       }
 
-      // Redirect to order confirmation or home
-      router.push("/");
+      // Redirect to the animated order-confirmation page
+      router.push(`/order-confirmation/${orderResult.order.order_id}`);
     } catch (error) {
       console.error("Error placing order:", error);
-      alert("Failed to place order. Please try again.");
+      showToast("Failed to place order. Please try again.", "error");
     } finally {
       setIsProcessing(false);
     }

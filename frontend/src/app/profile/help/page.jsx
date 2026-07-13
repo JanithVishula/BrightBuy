@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import MyTickets from "@/components/MyTickets";
 
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,6 +100,9 @@ export default function HelpPage() {
             Find answers to common questions and get help
           </p>
         </div>
+
+        {/* Customer's real support tickets */}
+        <MyTickets />
 
         {/* Search Bar */}
         <div className="bg-card border border-card-border rounded-lg shadow-sm p-4 mb-6">

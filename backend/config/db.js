@@ -1,31 +1,14 @@
 // config/db.js
-// Database connection — configured ENTIRELY via environment variables.
-// Supports DB_* (preferred) and MYSQL* (Railway-style) variable names.
+// Local MySQL connection, configured via DB_* environment variables (.env).
 const mysql = require("mysql2/promise");
 
 const dbConfig = {
-  host: process.env.DB_HOST || process.env.MYSQLHOST || "localhost",
-  port: Number(process.env.DB_PORT || process.env.MYSQLPORT || 3306),
-  user: process.env.DB_USER || process.env.MYSQLUSER || "root",
-  password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || "",
-  database: process.env.DB_NAME || process.env.MYSQLDATABASE || "brightbuy",
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "brightbuy",
 };
-
-// Enable SSL when DB_SSL=true (required by managed hosts like Aiven).
-// rejectUnauthorized:false lets us connect without bundling the CA cert;
-// set DB_SSL_REJECT_UNAUTHORIZED=true and provide a CA for stricter checks.
-const sslEnabled =
-  String(process.env.DB_SSL).toLowerCase() === "true" ||
-  String(process.env.MYSQL_SSL).toLowerCase() === "true";
-
-if (sslEnabled) {
-  dbConfig.ssl = {
-    rejectUnauthorized:
-      String(process.env.DB_SSL_REJECT_UNAUTHORIZED).toLowerCase() === "true",
-  };
-}
-
-console.log(`Loading database configuration for: ${process.env.NODE_ENV || "development"}`);
 
 // Create MySQL connection pool
 const pool = mysql.createPool({
@@ -37,7 +20,6 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ...(dbConfig.ssl && { ssl: dbConfig.ssl }),
 });
 
 pool
@@ -46,7 +28,6 @@ pool
     console.log("MySQL Database connected successfully!");
     console.log(`Connected to: ${dbConfig.host}:${dbConfig.port}`);
     console.log(`Database name: ${dbConfig.database}`);
-    console.log(`SSL: ${sslEnabled ? "enabled" : "disabled"}`);
     connection.release();
   })
   .catch((error) => {
