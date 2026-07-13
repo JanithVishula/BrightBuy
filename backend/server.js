@@ -5,6 +5,7 @@ const cors = require("cors");
 const compression = require("compression");
 const path = require("path");
 
+// Load environment variables immediately
 // Load environment variables FIRST before requiring db
 dotenv.config();
 

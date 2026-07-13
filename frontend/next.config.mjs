@@ -1,3 +1,5 @@
+// frontend/next.config.mjs
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Allow product images from the local backend and any https source.
